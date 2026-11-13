@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<!--
+  ============================================================
+  FPS 页面模板（复用自「客户逾期账龄表」原型）
+  用途：新建页面（如 逾期账单抵减明细 / 逾期账单抵减过程）时，
+        复制本文件，按标注的【替换点】修改即可。
+  组件规格（Element UI 风格，单文件零依赖）：
+    · 主色 #409EFF，hover #66B1FF；边框 #DCDFE6 / #EBEEF5
+    · 文字 #303133 / #606266 / #909399；页面底 #F2F3F5
+    · 表头 #F5F7FA 灰底；行悬停 #F5F7FA 淡灰；单元格白底
+    · 数字列右对齐、千分位；非零蓝字 / 0 灰字；状态用 Tag
+    · 侧边栏：FPS logo，可折叠（210px ↔ 64px），深色 #304156
+    · 筛选卡：分段按钮组 + 4 列条件 grid + 默认折叠高级查询
+    · 工具栏：五个蓝色实心按钮 + 逾期合计金额弹窗按钮
+    · 表格：自定义展示字段（操作列齿轮弹窗）
+    · 分页：10/20/50/100 条每页（默认 10）+ 跳页
+  ============================================================
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>页面模板 - FPS</title><!-- 【替换点1】页面标题 -->
+<style>
+  /* ===== 基础（Element UI 风格变量） ===== */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --primary: #409EFF;
+    --primary-light: #ECF5FF;
+    --primary-hover: #66B1FF;
+    --primary-active: #3A8EE6;
+    --border: #DCDFE6;
+    --border-light: #EBEEF5;
+    --text-main: #303133;
+    --text-regular: #606266;
+    --text-secondary: #909399;
+    --bg: #F2F3F5;
+    --danger: #F56C6C;
+    --warning: #E6A23C;
+    --success: #67C23A;
+    --sider-bg: #304156;
+    --sider-bg-dark: #1F2D3D;
+  }
+  body {
+    font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+    font-size: 14px;
+    color: var(--text-main);
+    background: var(--bg);
+  }
+
+  /* ===== 整体布局 ===== */
+  .layout { display: flex; min-height: 100vh; }
+
+  /* ===== 可折叠侧边栏 ===== */
+  .sider {
+    width: 210px;
+    flex: 0 0 210px;
+    background: var(--sider-bg);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: width .25s, flex-basis .25s;
+  }
+  .sider.collapsed { width: 64px; flex-basis: 64px; }
+
+  .sider-logo {
+    height: 56px;
+    flex: 0 0 56px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 16px;
+    background: var(--sider-bg-dark);
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .sider-logo .logo-icon {
+    width: 30px; height: 30px; flex: 0 0 30px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #409EFF, #2f6fd8);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700;
+  }
+  .sider-logo .logo-text { font-size: 15px; font-weight: 600; transition: opacity .2s; }
+  .sider.collapsed .logo-text { opacity: 0; width: 0; }
+  .sider.collapsed .sider-logo { justify-content: center; padding: 0; gap: 0; }
+
+  .sider-menu { list-style: none; flex: 1; padding: 8px 0; overflow-y: auto; }
+  .sider-menu::-webkit-scrollbar { width: 4px; }
+  .sider-menu::-webkit-scrollbar-thumb { background: rgba(255,255,255,.2); border-radius: 2px; }
+
+  .menu-item { display: block; position: relative; color: #BFCBD9; cursor: pointer; white-space: nowrap; user-select: none; }
+  .menu-item .mi-row {
+    display: flex; align-items: center; gap: 10px;
+    height: 44px; padding: 0 18px;
+    transition: background .2s, color .2s, padding .2s;
+  }
+  .menu-item .mi-row:hover { color: #fff; background: rgba(255,255,255,.06); }
+  .menu-item.active > .mi-row { color: #fff; background: var(--primary); }
+  .menu-item .mi-icon { width: 18px; flex: 0 0 18px; text-align: center; font-size: 16px; font-style: normal; }
+  .menu-item .mi-text { flex: 1; transition: opacity .2s; overflow: hidden; }
+  .sider.collapsed .mi-row { padding: 0 23px; }
+  .sider.collapsed .mi-text { opacity: 0; width: 0; flex: 0 0 0; overflow: hidden; }
+
+  .sider-footer {
+    flex: 0 0 44px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,.2); color: #BFCBD9; cursor: pointer;
+    transition: color .2s; font-size: 16px;
+  }
+  .sider-footer:hover { color: #fff; }
+
+  /* ===== 右侧主区域 ===== */
+  .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+  .header {
+    height: 56px;
+    flex: 0 0 56px;
+    background: #fff;
+    border-bottom: 1px solid var(--border-light);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px;
+    box-shadow: 0 1px 4px rgba(0,21,41,.08);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .breadcrumb { display: flex; align-items: center; gap: 6px; color: var(--text-secondary); font-size: 13px; }
+  .breadcrumb .sep { color: var(--border); }
+  .breadcrumb .cur { color: var(--text-main); }
+
+  .header-right { display: flex; align-items: center; gap: 20px; }
+  .header-icon { font-size: 18px; color: var(--text-secondary); cursor: pointer; position: relative; }
+  .header-icon:hover { color: var(--primary); }
+  .header-icon .badge {
+    position: absolute; top: -4px; right: -8px;
+    background: var(--danger); color: #fff;
+    font-size: 10px; line-height: 1;
+    padding: 2px 5px; border-radius: 8px;
+  }
+  .user-info { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--primary); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+  }
+  .user-name { color: var(--text-main); font-size: 13px; }
+
+  .page { padding: 14px 16px 24px; flex: 1; }
+
+  /* ===== 卡片 ===== */
+  .card { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.05); margin-bottom: 14px; }
+  .card-body { padding: 14px 18px; }
+
+  /* ===== 分段按钮组 ===== */
+  .seg-row { display: flex; align-items: center; margin-bottom: 12px; }
+  .seg-row .seg-label { width: 84px; flex: 0 0 84px; text-align: right; padding-right: 12px; color: var(--text-regular); font-size: 13px; }
+  .seg-group { display: flex; gap: 6px; flex-wrap: wrap; }
+  .seg-btn {
+    min-width: 72px; height: 28px; padding: 0 14px;
+    border: 1px solid var(--border); border-radius: 3px;
+    background: #F5F7FA; color: var(--text-regular);
+    font-size: 13px; cursor: pointer; transition: all .15s; text-align: center;
+  }
+  .seg-btn:hover { color: var(--primary); border-color: var(--primary); background: var(--primary-light); }
+  .seg-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+  /* ===== 筛选表单 ===== */
+  .filter-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px 24px;
+    margin-bottom: 4px;
+  }
+  @media (max-width: 1400px) { .filter-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (max-width: 1100px) { .filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  /* 默认折叠高级查询：仅显示前 8 项（两行） */
+  .filter-grid.adv-collapsed .fi:nth-child(n+9) { display: none; }
+
+  .fi { display: flex; align-items: center; min-width: 0; }
+  .fi .fi-tip {
+    display: inline-block;
+    width: 13px; height: 13px;
+    line-height: 12px;
+    text-align: center;
+    border: 1px solid #C0C4CC;
+    border-radius: 50%;
+    font-size: 10px;
+    color: #C0C4CC;
+    cursor: help;
+    flex: 0 0 13px;
+  }
+  .fi > label {
+    width: 96px; flex: 0 0 96px; text-align: right; padding-right: 10px;
+    color: var(--text-regular); font-size: 13px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .fi-controls { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; }
+
+  .el-input, .el-select {
+    height: 30px; padding: 0 9px;
+    border: 1px solid var(--border); border-radius: 3px;
+    background: #fff; font-size: 12px; color: var(--text-regular);
+    outline: none; transition: border-color .2s;
+    width: 100%; min-width: 0;
+  }
+  .el-select {
+    appearance: none; padding-right: 26px; cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23C0C4CC'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 9px center;
+  }
+  .el-input:hover, .el-select:hover { border-color: var(--text-secondary); }
+  .el-input:focus, .el-select:focus { border-color: var(--primary); }
+  .el-input::placeholder { color: #C0C4CC; }
+
+  .range-group { flex: 1; min-width: 0; display: flex; align-items: center; gap: 4px; }
+  .range-group .el-select { flex: 0 0 104px; }
+  .range-group .el-input { flex: 1; min-width: 0; }
+  .range-sep { color: #C0C4CC; font-size: 12px; flex: 0 0 auto; }
+
+  /* ===== 按钮 ===== */
+  .btn {
+    height: 30px; padding: 0 16px;
+    border: 1px solid var(--border); border-radius: 3px;
+    background: #fff; font-size: 13px; color: var(--text-regular);
+    cursor: pointer; display: inline-flex; align-items: center; gap: 5px;
+    transition: all .1s; white-space: nowrap;
+  }
+  .btn:hover { color: var(--primary-hover); border-color: var(--primary-hover); }
+  .btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); color: #fff; }
+  .filter-actions { display: flex; gap: 10px; padding-left: 96px; margin-top: 12px; }
+  .link-expand { background: transparent; border: none; color: var(--primary); cursor: pointer; font-size: 13px; padding: 0 4px; }
+  .link-expand:hover { color: var(--primary-hover); }
+
+  /* ===== 工具栏 ===== */
+  .table-toolbar {
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 10px; margin-bottom: 12px;
+  }
+  .toolbar-left { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn-sup {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 13px; height: 13px; border-radius: 50%;
+    background: #fff; color: var(--primary); font-size: 10px;
+    transform: scale(.85);
+  }
+  .sum-box { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-regular); }
+
+  /* ===== 表格 ===== */
+  .table-wrap { overflow-x: auto; }
+  .el-table { width: 100%; border-collapse: collapse; }
+  .el-table th {
+    background: #F5F7FA; color: var(--text-main); font-weight: 600;
+    text-align: left; padding: 9px 8px;
+    border-bottom: 1px solid var(--border-light);
+    white-space: nowrap; font-size: 12px;
+  }
+  .el-table th.num, .el-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .el-table td {
+    padding: 9px 8px;
+    border-bottom: 1px solid var(--border-light);
+    color: var(--text-regular); font-size: 12px; white-space: nowrap;
+  }
+  .el-table tbody tr { transition: background .15s; }
+  .el-table tbody tr:hover td { background: #F5F7FA; }
+  .amount { color: var(--primary); }
+  .amount.zero, .zero { color: var(--text-secondary); }
+  .cell-empty { color: #C0C4CC; }
+
+  /* 复选框 */
+  .el-checkbox {
+    width: 14px; height: 14px;
+    appearance: none;
+    border: 1px solid var(--border); border-radius: 2px;
+    background: #fff; cursor: pointer;
+    display: inline-block; vertical-align: middle; position: relative;
+  }
+  .el-checkbox:checked { background: var(--primary); border-color: var(--primary); }
+  .el-checkbox:checked::after {
+    content: '';
+    position: absolute; left: 4px; top: 1px;
+    width: 4px; height: 8px;
+    border: solid #fff; border-width: 0 1.5px 1.5px 0;
+    transform: rotate(45deg);
+  }
+
+  /* 状态标签 */
+  .el-tag {
+    display: inline-block; padding: 2px 8px; border-radius: 3px;
+    font-size: 12px; line-height: 1.4; border: 1px solid; white-space: nowrap;
+  }
+  .el-tag.success { background: #F0F9EB; color: var(--success); border-color: #C2E7B0; }
+  .el-tag.danger  { background: #FEF0F0; color: var(--danger);  border-color: #FBC4C4; }
+
+  /* 操作链接 */
+  .op-link { color: var(--primary); text-decoration: none; cursor: pointer; margin-right: 8px; font-size: 12px; }
+  .op-link:hover { color: var(--primary-hover); }
+  .op-more { color: var(--primary); cursor: pointer; font-size: 12px; }
+
+  .th-setting { cursor: pointer; margin-left: 8px; font-size: 14px; color: var(--text-secondary); }
+  .th-setting:hover { color: var(--primary); }
+
+  /* ===== 字段选择弹出层（操作列齿轮） ===== */
+  .col-pop {
+    position: fixed;
+    width: 250px;
+    background: #fff;
+    border: 1px solid var(--border-light);
+    border-radius: 4px;
+    box-shadow: 0 4px 16px rgba(0,0,0,.12);
+    z-index: 2000;
+    display: none;
+  }
+  .col-pop.open { display: block; }
+  .col-pop .cp-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-light);
+    font-size: 13px; font-weight: 600; color: var(--text-main);
+  }
+  .col-pop .cp-head .cp-count { font-size: 12px; font-weight: 400; color: var(--text-secondary); }
+  .col-pop .cp-list { max-height: 280px; overflow-y: auto; padding: 4px 0; }
+  .col-pop .cp-list::-webkit-scrollbar { width: 4px; }
+  .col-pop .cp-list::-webkit-scrollbar-thumb { background: #DCDFE6; border-radius: 2px; }
+  .col-pop .cp-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 14px; font-size: 12px; color: var(--text-regular);
+    cursor: pointer; white-space: nowrap; overflow: hidden;
+  }
+  .col-pop .cp-item:hover { background: #F5F7FA; }
+  .col-pop .cp-foot {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 14px;
+    border-top: 1px solid var(--border-light);
+  }
+  .cp-link { color: var(--primary); cursor: pointer; font-size: 12px; margin-right: 12px; }
+  .cp-link:hover { color: var(--primary-hover); }
+  .cp-done {
+    height: 24px; padding: 0 12px;
+    background: var(--primary); border: none; border-radius: 3px;
+    color: #fff; font-size: 12px; cursor: pointer;
+  }
+  .cp-done:hover { background: var(--primary-hover); }
+
+  /* ===== 逾期合计金额弹窗 ===== */
+  .sum-dialog-mask {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.5);
+    display: none;
+    align-items: flex-start;
+    justify-content: center;
+    z-index: 2100;
+    padding: 10vh 16px 16px;
+    overflow-y: auto;
+  }
+  .sum-dialog-mask.open { display: flex; }
+  .sum-dialog {
+    width: 560px; max-width: 100%;
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.2);
+    animation: dlg-in .2s ease-out;
+  }
+  @keyframes dlg-in { from { transform: translateY(-14px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .sd-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .sd-title { font-size: 15px; font-weight: 600; color: var(--text-main); }
+  .sd-close {
+    border: none; background: transparent;
+    font-size: 18px; color: var(--text-secondary);
+    cursor: pointer; width: 26px; height: 26px;
+    border-radius: 4px; line-height: 1;
+  }
+  .sd-close:hover { color: var(--text-main); background: #F5F7FA; }
+  .sd-body { padding: 14px 18px 4px; max-height: 62vh; overflow-y: auto; }
+  .sd-table { width: 100%; border-collapse: collapse; }
+  .sd-table th {
+    background: #E9EBF8;
+    color: var(--text-main);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-light);
+    white-space: nowrap;
+  }
+  .sd-table th.num { text-align: right; }
+  .sd-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-light);
+    font-size: 13px;
+    color: var(--text-regular);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .sd-table td.num { text-align: right; }
+  .sd-table tbody tr { transition: background .15s; }
+  .sd-table tbody tr:hover td { background: #F5F7FA; }
+  .sd-table tr.sd-sum td { background: #F0F1F9; font-weight: 600; color: var(--text-main); }
+  .sd-footer { display: flex; justify-content: center; padding: 14px 0 18px; }
+
+  /* ===== 分页 ===== */
+  .pagination {
+    display: flex; align-items: center; gap: 6px;
+    margin-top: 14px; color: var(--text-regular); font-size: 13px; flex-wrap: wrap;
+  }
+  .pg-sizes { display: flex; align-items: center; gap: 6px; margin-left: 10px; }
+  .pg-sizes .el-select { width: 88px; flex: 0 0 88px; }
+  .pg-btn {
+    min-width: 28px; height: 28px;
+    border: 1px solid var(--border); border-radius: 3px;
+    background: #fff; color: var(--text-regular); font-size: 13px;
+    cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+    padding: 0 6px; transition: all .15s;
+  }
+  .pg-btn:hover:not(:disabled):not(.active) { color: var(--primary); border-color: var(--primary); }
+  .pg-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; cursor: default; }
+  .pg-btn:disabled { color: #C0C4CC; cursor: not-allowed; background: #F5F7FA; }
+  .pg-jumper { margin-left: 8px; display: flex; align-items: center; gap: 5px; }
+  .pg-jumper input {
+    width: 42px; height: 26px;
+    border: 1px solid var(--border); border-radius: 3px;
+    text-align: center; outline: none; font-size: 12px;
+  }
+  .pg-jumper input:focus { border-color: var(--primary); }
+  .pg-dots { color: var(--text-secondary); }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ===== 可折叠侧边栏 ===== -->
+  <aside class="sider" id="sider">
+    <div class="sider-logo">
+      <div class="logo-icon">F</div>
+      <div class="logo-text">FPS</div>
+    </div>
+    <ul class="sider-menu">
+      <!-- 【替换点2】菜单列表：当前页对应菜单加 active -->
+      <li class="menu-item" title="客户逾期账龄表">
+        <div class="mi-row" onclick="switchMenu(this, '客户逾期账龄表', event)">
+          <i class="mi-icon">📊</i><span class="mi-text">客户逾期账龄表</span>
+        </div>
+      </li>
+      <li class="menu-item" title="逾期账单抵减明细">
+        <div class="mi-row" onclick="switchMenu(this, '逾期账单抵减明细', event)">
+          <i class="mi-icon">🧾</i><span class="mi-text">逾期账单抵减明细</span>
+        </div>
+      </li>
+      <li class="menu-item" title="逾期账单抵减过程">
+        <div class="mi-row" onclick="switchMenu(this, '逾期账单抵减过程', event)">
+          <i class="mi-icon">🔁</i><span class="mi-text">逾期账单抵减过程</span>
+        </div>
+      </li>
+    </ul>
+    <div class="sider-footer" id="collapseBtn" title="收起菜单">⟨</div>
+  </aside>
+
+  <!-- ===== 右侧主区域 ===== -->
+  <div class="main">
+    <div class="header">
+      <div class="breadcrumb">
+        <span>首页</span><span class="sep">/</span><span>报表中心</span><span class="sep">/</span><span class="cur" id="crumbCur">页面模板</span><!-- 【替换点3】面包屑当前页 -->
+      </div>
+      <div class="header-right">
+        <span class="header-icon" title="消息">🔔<span class="badge">3</span></span>
+        <span class="header-icon" title="帮助">❓</span>
+        <div class="user-info">
+          <div class="avatar">张</div>
+          <span class="user-name">张财务</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="page">
+
+      <!-- ===== 筛选区 ===== -->
+      <div class="card">
+        <div class="card-body">
+
+          <div class="seg-row">
+            <span class="seg-label">状态:</span>
+            <div class="seg-group">
+              <button class="seg-btn active" onclick="segPick(this)">全部</button>
+              <button class="seg-btn" onclick="segPick(this)">成功</button>
+              <button class="seg-btn" onclick="segPick(this)">处理中</button>
+              <button class="seg-btn" onclick="segPick(this)">失败</button>
+            </div>
+          </div>
+
+          <!-- 【替换点4】条件字段（前 8 项为默认展示的基础条件） -->
+          <div class="filter-grid adv-collapsed">
+            <div class="fi">
+              <label>编码:</label>
+              <div class="fi-controls">
+                <div class="range-group">
+                  <select class="el-select" id="fCodeField">
+                    <option value="0">字段一</option>
+                    <option value="1">字段二</option>
+                  </select>
+                  <input type="text" class="el-input" id="fCode" placeholder="多个以分号隔开，最多200个">
+                </div>
+              </div>
+            </div>
+            <div class="fi">
+              <label>条件2:</label>
+              <div class="fi-controls">
+                <select class="el-select"><option value="">请选择条件2</option><option>A</option><option>B</option></select>
+              </div>
+            </div>
+            <div class="fi">
+              <label>条件3:</label>
+              <div class="fi-controls">
+                <input type="text" class="el-input" placeholder="请输入条件3">
+              </div>
+            </div>
+            <div class="fi">
+              <label>条件4:</label>
+              <div class="fi-controls">
+                <div class="range-group">
+                  <input type="text" class="el-input" placeholder="最小值">
+                  <span class="range-sep">-</span>
+                  <input type="text" class="el-input" placeholder="最大值">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="filter-actions">
+            <button class="btn btn-primary" onclick="doSearch()">查 询</button>
+            <button class="btn" onclick="doReset()">重 置</button>
+            <button class="link-expand" onclick="toggleAdvanced(this)">展开高级查询 ∨</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 表格区 ===== -->
+      <div class="card">
+        <div class="card-body">
+          <div class="table-toolbar">
+            <div class="toolbar-left">
+              <button class="btn btn-primary" onclick="alert('原型演示：手动执行')">手动执行<span class="btn-sup">1</span></button>
+              <button class="btn btn-primary" onclick="alert('原型演示：手动同步')">手动同步<span class="btn-sup">2</span></button>
+              <button class="btn btn-primary" onclick="alert('原型演示：批量重试')">批量重试<span class="btn-sup">3</span></button>
+              <button class="btn btn-primary" onclick="alert('原型演示：导出')">⬇ 导出</button>
+              <button class="btn btn-primary" onclick="alert('原型演示：一键查看原文')">一键查看原文</button>
+            </div>
+            <div class="sum-box">
+              <button class="btn btn-primary" onclick="openSumDialog()">合计金额</button><!-- 【替换点5】按钮名称/数据 -->
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="el-table">
+              <thead id="tableHead"></thead>
+              <tbody id="tableBody"></tbody>
+            </table>
+          </div>
+
+          <!-- 分页 -->
+          <div class="pagination">
+            <span id="pgTotal"></span>
+            <div class="pg-sizes">
+              <select class="el-select" id="pgSize" onchange="changeSize(this)">
+                <option value="10">10条/页</option>
+                <option value="20">20条/页</option>
+                <option value="50">50条/页</option>
+                <option value="100">100条/页</option>
+              </select>
+            </div>
+            <button class="pg-btn" id="pgPrev" onclick="goPage(page-1)">上一页</button>
+            <span id="pgPages"></span>
+            <button class="pg-btn" id="pgNext" onclick="goPage(page+1)">下一页</button>
+            <div class="pg-jumper">
+              <span>前往</span><input type="number" min="1" id="pgJump" value="1"><span>页</span>
+              <button class="btn" style="height:26px;padding:0 10px;" onclick="goPage(document.getElementById('pgJump').value)">GO</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 字段选择弹出层（点击操作列齿轮） ===== -->
+<div class="col-pop" id="colPop">
+  <div class="cp-head">
+    <span>自定义展示字段</span>
+    <span class="cp-count" id="cpCount"></span>
+  </div>
+  <div class="cp-list" id="cpList"></div>
+  <div class="cp-foot">
+    <span>
+      <a class="cp-link" onclick="colSelAll()">全选</a>
+      <a class="cp-link" onclick="colReset()">恢复默认</a>
+    </span>
+    <button class="cp-done" onclick="closeColPop()">完成</button>
+  </div>
+</div>
+
+<!-- ===== 合计金额弹窗 ===== -->
+<div class="sum-dialog-mask" id="sumDialog">
+  <div class="sum-dialog">
+    <div class="sd-header">
+      <span class="sd-title" id="sumDialogTitle">合计金额</span>
+      <button class="sd-close" onclick="closeSumDialog()">✕</button>
+    </div>
+    <div class="sd-body">
+      <table class="sd-table">
+        <thead>
+          <tr>
+            <th style="width:72px;">序号</th>
+            <th class="num">金额</th>
+            <th class="num">本位币金额</th>
+          </tr>
+        </thead>
+        <tbody id="sumDialogBody"></tbody>
+        <tfoot>
+          <tr class="sd-sum">
+            <td>合计</td>
+            <td class="num"></td>
+            <td class="num" id="sumDialogTotal">--</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <div class="sd-footer">
+      <button class="btn btn-primary" onclick="closeSumDialog()">返 回</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== 侧边栏折叠 ===== */
+var sider = document.getElementById('sider');
+var collapseBtn = document.getElementById('collapseBtn');
+collapseBtn.addEventListener('click', function () {
+  sider.classList.toggle('collapsed');
+  collapseBtn.textContent = sider.classList.contains('collapsed') ? '⟩' : '⟨';
+  collapseBtn.title = sider.classList.contains('collapsed') ? '展开菜单' : '收起菜单';
+});
+
+/* ===== 菜单切换 ===== */
+function switchMenu(el, name, ev) {
+  if (ev) ev.stopPropagation();
+  var target = el.closest('li.menu-item');
+  if (target) {
+    document.querySelectorAll('.sider-menu .menu-item').forEach(function (m) { m.classList.remove('active'); });
+    target.classList.add('active');
+  }
+  document.getElementById('crumbCur').textContent = name;
+  alert('原型演示：切换到「' + name + '」（请基于本模板创建对应页面）');
+}
+
+/* ===== 分段按钮组单选 ===== */
+function segPick(btn) {
+  btn.parentElement.querySelectorAll('.seg-btn').forEach(function (b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+}
+
+/* ===== 高级查询展开/收起（默认折叠，仅显示前 8 项） ===== */
+function toggleAdvanced(btn) {
+  var grid = document.querySelector('.filter-grid');
+  var collapsed = grid.classList.toggle('adv-collapsed');
+  btn.textContent = collapsed ? '展开高级查询 ∨' : '收起高级查询 ∧';
+}
+
+/* ======================================================
+   【替换点6】列定义（k 唯一键 / label 表头 / num 是否数字列 / w 列宽）
+   ====================================================== */
+var COLS = [
+  { k:'code',   label:'单据编号', i:0 },
+  { k:'cur',    label:'币种',     i:1 },
+  { k:'amount', label:'金额',     i:2, num:true },
+  { k:'status', label:'状态',     i:3 }
+];
+
+/* 默认展示字段（其余默认不展示，可在齿轮面板中勾选） */
+var DEFAULT_VISIBLE = ['code','cur','amount','status'];
+var visibleKeys = DEFAULT_VISIBLE.slice();
+
+/* ======================================================
+   【替换点7】数据（数组，列序与 COLS.i 对应）
+   ====================================================== */
+var rows = [
+  ['BILL-001','CNY', 1000.00,'成功'],
+  ['BILL-002','CNY', 2500.50,'失败'],
+  ['BILL-003','USD', 800.00, '处理中'],
+  ['BILL-004','CNY', 0,      '成功'],
+  ['BILL-005','CNY', 12500.75,'成功']
+];
+
+/* ===== 状态管理 ===== */
+var filtered = rows.slice();
+var page = 1;
+var pageSize = 10;
+
+/* ===== 单元格渲染 ===== */
+function fmtNum(v) {
+  if (v === '' || v === null || v === undefined) return '<span class="zero">--</span>';
+  var n = Number(v);
+  var s = n.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return n === 0 ? '<span class="zero">' + s + '</span>'
+                 : '<span class="amount">' + (n < 0 ? '-' + s.replace('-', '') : s) + '</span>';
+}
+function fmtText(v) {
+  if (v === '' || v === null || v === undefined) return '<span class="cell-empty">--</span>';
+  return String(v);
+}
+function fmtStatus(v) {
+  if (v === '成功') return '<span class="el-tag success">成功</span>';
+  if (v === '失败') return '<span class="el-tag danger">失败</span>';
+  return fmtText(v);
+}
+
+function cellHtml(col, row) {
+  var v = row[col.i];
+  if (col.k === 'status') return fmtStatus(v);
+  if (col.num) return fmtNum(v);
+  return fmtText(v);
+}
+
+/* ===== 表格渲染 ===== */
+function visibleCols() {
+  return COLS.filter(function (c) { return visibleKeys.indexOf(c.k) > -1; });
+}
+
+function render() {
+  var head = '<tr>'
+    + '<th style="width:36px;"><input type="checkbox" class="el-checkbox" id="checkAll" onchange="toggleCheckAll(this)"></th>'
+    + '<th style="width:48px;">序号</th>';
+  visibleCols().forEach(function (c) {
+    head += '<th class="' + (c.num ? 'num' : '') + '" style="width:' + (c.w || 120) + 'px;">' + c.label + '</th>';
+  });
+  head += '<th style="width:200px;">操作<span class="th-setting" title="自定义展示字段" onclick="openColPop(event)">⚙</span></th></tr>';
+  document.getElementById('tableHead').innerHTML = head;
+
+  var start = (page - 1) * pageSize;
+  var view = filtered.slice(start, start + pageSize);
+  var body = view.map(function (r, i) {
+    var tr = '<tr>'
+      + '<td><input type="checkbox" class="el-checkbox row-check"></td>'
+      + '<td>' + (start + i + 1) + '</td>';
+    visibleCols().forEach(function (c) {
+      tr += '<td class="' + (c.num ? 'num' : '') + '">' + cellHtml(c, r) + '</td>';
+    });
+    tr += '<td>'
+      + '<a class="op-link" onclick="rowOp(\'查看原文\', this)">查看原文</a>'
+      + '<a class="op-link" onclick="rowOp(\'手动同步\', this)">手动同步</a>'
+      + '<a class="op-link" onclick="rowOp(\'重试\', this)">重试</a>'
+      + '<span class="op-more" onclick="rowOp(\'更多操作\', this)">更多 ▾</span>'
+      + '</td></tr>';
+    return tr;
+  }).join('');
+  if (!view.length) {
+    var colspan = visibleCols().length + 3;
+    body = '<tr><td colspan="' + colspan + '" style="text-align:center;padding:48px 0;color:#909399;">暂无数据</td></tr>';
+  }
+  document.getElementById('tableBody').innerHTML = body;
+
+  renderPagination();
+}
+
+/* ===== 分页渲染 ===== */
+function renderPagination() {
+  var total = filtered.length;
+  var pages = Math.max(1, Math.ceil(total / pageSize));
+  if (page > pages) page = pages;
+
+  document.getElementById('pgTotal').innerHTML = '共 <b>' + total + '</b> 条';
+
+  var html = '';
+  for (var p = 1; p <= pages; p++) {
+    html += '<button class="pg-btn' + (p === page ? ' active' : '') + '" onclick="goPage(' + p + ')">' + p + '</button>';
+  }
+  document.getElementById('pgPages').innerHTML = html;
+  document.getElementById('pgPrev').disabled = page <= 1;
+  document.getElementById('pgNext').disabled = page >= pages;
+  document.getElementById('pgJump').value = page;
+  document.getElementById('pgJump').max = pages;
+}
+
+function goPage(p) {
+  var pages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  p = Math.max(1, Math.min(pages, Number(p) || 1));
+  page = p;
+  render();
+  document.querySelector('.table-wrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function changeSize(sel) {
+  pageSize = Number(sel.value);
+  page = 1;
+  render();
+}
+
+/* ===== 行操作 / 全选 ===== */
+function rowOp(name, el) {
+  var code = el.closest('tr').children[2].textContent;
+  alert('原型演示：对「' + code + '」执行「' + name + '」');
+}
+function toggleCheckAll(master) {
+  document.querySelectorAll('.row-check').forEach(function (c) { c.checked = master.checked; });
+}
+
+/* ===== 查询 / 重置 ===== */
+function gv(id) {
+  var el = document.getElementById(id);
+  return el ? (el.value || '').trim() : '';
+}
+function doSearch() {
+  var kw = gv('fCode');
+  if (!kw) { filtered = rows.slice(); }
+  else {
+    var fIdx = Number(gv('fCodeField')) || 0;
+    var keys = kw.split(/[;；]/).map(function (s) { return s.trim().toUpperCase(); }).filter(Boolean);
+    filtered = rows.filter(function (r) {
+      return keys.some(function (k) { return String(r[fIdx]).toUpperCase().indexOf(k) > -1; });
+    });
+  }
+  page = 1;
+  render();
+}
+function doReset() {
+  document.querySelectorAll('.filter-grid input[type="text"]').forEach(function (i) { i.value = ''; });
+  document.querySelectorAll('.filter-grid .el-select').forEach(function (s) { s.selectedIndex = 0; });
+  document.querySelectorAll('.seg-group').forEach(function (g) {
+    g.querySelectorAll('.seg-btn').forEach(function (b, i) { b.classList.toggle('active', i === 0); });
+  });
+  filtered = rows.slice();
+  page = 1;
+  render();
+}
+
+/* ===== 字段选择弹出层（操作列齿轮） ===== */
+var colPop = document.getElementById('colPop');
+
+function openColPop(ev) {
+  ev.stopPropagation();
+  if (colPop.classList.contains('open')) { closeColPop(); return; }
+  renderColPop();
+  var rect = ev.target.getBoundingClientRect();
+  var w = 250;
+  var left = Math.min(rect.right - w, window.innerWidth - w - 8);
+  var top = rect.bottom + 6;
+  if (top + 360 > window.innerHeight) top = Math.max(8, rect.top - 360);
+  colPop.style.left = Math.max(8, left) + 'px';
+  colPop.style.top = top + 'px';
+  colPop.classList.add('open');
+}
+
+function closeColPop() { colPop.classList.remove('open'); }
+
+function renderColPop() {
+  var list = COLS.map(function (c) {
+    var checked = visibleKeys.indexOf(c.k) > -1 ? ' checked' : '';
+    return '<label class="cp-item" onclick="event.stopPropagation()">'
+      + '<input type="checkbox" class="el-checkbox" data-k="' + c.k + '"' + checked + ' onchange="colToggle(\'' + c.k + '\', this)">'
+      + '<span>' + c.label + '</span></label>';
+  }).join('');
+  document.getElementById('cpList').innerHTML = list;
+  document.getElementById('cpCount').textContent = visibleKeys.length + '/' + COLS.length;
+}
+
+function colToggle(k, cb) {
+  var idx = visibleKeys.indexOf(k);
+  if (cb.checked && idx === -1) visibleKeys.push(k);
+  if (!cb.checked && idx > -1) visibleKeys.splice(idx, 1);
+  document.getElementById('cpCount').textContent = visibleKeys.length + '/' + COLS.length;
+  render();
+}
+
+function colSelAll() {
+  visibleKeys = COLS.map(function (c) { return c.k; });
+  renderColPop();
+  render();
+}
+
+function colReset() {
+  visibleKeys = DEFAULT_VISIBLE.slice();
+  renderColPop();
+  render();
+}
+
+/* 点击空白处关闭弹出层 */
+document.addEventListener('click', function (e) {
+  if (colPop.classList.contains('open') && !colPop.contains(e.target)) closeColPop();
+});
+
+/* ======================================================
+   合计金额弹窗（分币种汇总 + 本位币折算）
+   【替换点8】SUM_DATA 按页面实际数据替换
+   ====================================================== */
+var SUM_DATA = [
+  [1000.00,   'CNY', 1000.00],
+  [800.00,    'USD', 5705.60]
+];
+
+function fmt4(v) {
+  var s = Math.abs(v).toLocaleString('zh-CN', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+  return v < 0 ? '-' + s : s;
+}
+
+var sumDialog = document.getElementById('sumDialog');
+
+function openSumDialog() {
+  var body = SUM_DATA.map(function (r, i) {
+    return '<tr>'
+      + '<td>' + (i + 1) + '</td>'
+      + '<td class="num">' + fmt4(r[0]) + ' ' + r[1] + '</td>'
+      + '<td class="num">' + fmt4(r[2]) + ' CNY</td>'
+      + '</tr>';
+  }).join('');
+  document.getElementById('sumDialogBody').innerHTML = body;
+
+  var total = SUM_DATA.reduce(function (s, r) { return s + r[2]; }, 0);
+  document.getElementById('sumDialogTotal').textContent = fmt4(total) + ' CNY';
+
+  sumDialog.classList.add('open');
+}
+
+function closeSumDialog() { sumDialog.classList.remove('open'); }
+
+sumDialog.addEventListener('click', function (e) {
+  if (e.target === this) closeSumDialog();
+});
+
+/* ===== 初始化 ===== */
+render();
+</script>
+</body>
+</html>

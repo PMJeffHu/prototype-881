@@ -1,0 +1,2037 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>客户逾期账龄表 - FPS</title>
+<style>
+  /* ===== 基础（Element UI 风格变量） ===== */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --primary: #409EFF;
+    --primary-light: #ECF5FF;
+    --primary-hover: #66B1FF;
+    --primary-active: #3A8EE6;
+    --border: #DCDFE6;
+    --border-light: #EBEEF5;
+    --text-main: #303133;
+    --text-regular: #606266;
+    --text-secondary: #909399;
+    --bg: #F2F3F5;
+    --danger: #F56C6C;
+    --warning: #E6A23C;
+    --success: #67C23A;
+    --sider-bg: #304156;
+    --sider-bg-dark: #1F2D3D;
+  }
+  body {
+    font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+    font-size: 14px;
+    color: var(--text-main);
+    background: var(--bg);
+  }
+
+  /* ===== 整体布局 ===== */
+  .layout { display: flex; min-height: 100vh; }
+
+  /* ===== 侧边栏（可折叠） ===== */
+  .sider {
+    width: 210px;
+    flex: 0 0 210px;
+    background: var(--sider-bg);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: width .25s, flex-basis .25s;
+  }
+  .sider.collapsed { width: 64px; flex-basis: 64px; }
+
+  .sider-logo {
+    height: 56px;
+    flex: 0 0 56px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 16px;
+    background: var(--sider-bg-dark);
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .sider-logo .logo-icon {
+    width: 30px; height: 30px; flex: 0 0 30px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #409EFF, #2f6fd8);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700;
+  }
+  .sider-logo .logo-text { font-size: 15px; font-weight: 600; transition: opacity .2s; }
+  .sider.collapsed .logo-text { opacity: 0; width: 0; }
+  .sider.collapsed .sider-logo { justify-content: center; padding: 0; gap: 0; }
+
+  .sider-menu { list-style: none; flex: 1; padding: 8px 0; overflow-y: auto; }
+  .sider-menu::-webkit-scrollbar { width: 4px; }
+  .sider-menu::-webkit-scrollbar-thumb { background: rgba(255,255,255,.2); border-radius: 2px; }
+
+  .menu-item { display: block; position: relative; color: #BFCBD9; cursor: pointer; white-space: nowrap; user-select: none; }
+  .menu-item .mi-row {
+    display: flex; align-items: center; gap: 10px;
+    height: 44px; padding: 0 18px;
+    transition: background .2s, color .2s, padding .2s;
+  }
+  .menu-item .mi-row:hover { color: #fff; background: rgba(255,255,255,.06); }
+  .menu-item.active > .mi-row { color: #fff; background: var(--primary); }
+  .menu-item .mi-icon { width: 18px; flex: 0 0 18px; text-align: center; font-size: 16px; font-style: normal; }
+  .menu-item .mi-text { flex: 1; transition: opacity .2s; overflow: hidden; }
+  .sider.collapsed .mi-row { padding: 0 23px; }
+  .sider.collapsed .mi-text { opacity: 0; width: 0; flex: 0 0 0; overflow: hidden; }
+
+  .sider-footer {
+    flex: 0 0 44px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,.2); color: #BFCBD9; cursor: pointer;
+    transition: color .2s; font-size: 16px;
+  }
+  .sider-footer:hover { color: #fff; }
+
+  /* ===== 右侧主区域 ===== */
+  .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+  .header {
+    height: 56px;
+    flex: 0 0 56px;
+    background: #fff;
+    border-bottom: 1px solid var(--border-light);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px;
+    box-shadow: 0 1px 4px rgba(0,21,41,.08);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .breadcrumb { display: flex; align-items: center; gap: 6px; color: var(--text-secondary); font-size: 13px; }
+  .breadcrumb .sep { color: var(--border); }
+  .breadcrumb .cur { color: var(--text-main); }
+
+  .header-right { display: flex; align-items: center; gap: 20px; }
+  .header-icon { font-size: 18px; color: var(--text-secondary); cursor: pointer; position: relative; }
+  .header-icon:hover { color: var(--primary); }
+  .header-icon .badge {
+    position: absolute; top: -4px; right: -8px;
+    background: var(--danger); color: #fff;
+    font-size: 10px; line-height: 1;
+    padding: 2px 5px; border-radius: 8px;
+  }
+  .user-info { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--primary); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+  }
+  .user-name { color: var(--text-main); font-size: 13px; }
+
+  .page { padding: 14px 16px 24px; flex: 1; }
+
+  /* ===== 视图（单文件多页切换） ===== */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ===== 卡片 ===== */
+  .card { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.05); margin-bottom: 14px; }
+  .card-body { padding: 14px 18px; }
+
+  /* ===== 分段按钮组 ===== */
+  .seg-row { display: flex; align-items: center; margin-bottom: 12px; }
+  .seg-row .seg-label { width: 84px; flex: 0 0 84px; text-align: right; padding-right: 12px; color: var(--text-regular); font-size: 13px; }
+  .seg-group { display: flex; gap: 6px; flex-wrap: wrap; }
+  .seg-btn {
+    min-width: 72px; height: 28px; padding: 0 14px;
+    border: 1px solid var(--border); border-radius: 3px;
+    background: #F5F7FA; color: var(--text-regular);
+    font-size: 13px; cursor: pointer; transition: all .15s; text-align: center;
+  }
+  .seg-btn:hover { color: var(--primary); border-color: var(--primary); background: var(--primary-light); }
+  .seg-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+  /* ===== 筛选表单 ===== */
+  .filter-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px 24px;
+    margin-bottom: 4px;
+  }
+  @media (max-width: 1400px) { .filter-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (max-width: 1100px) { .filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  /* 默认折叠高级查询：仅显示前 8 项（两行） */
+  .filter-grid.adv-collapsed .fi:nth-child(n+9) { display: none; }
+
+  .fi { display: flex; align-items: center; min-width: 0; }
+  .fi .fi-tip {
+    display: inline-block;
+    width: 13px; height: 13px;
+    line-height: 12px;
+    text-align: center;
+    border: 1px solid #C0C4CC;
+    border-radius: 50%;
+    font-size: 10px;
+    color: #C0C4CC;
+    cursor: help;
+    flex: 0 0 13px;
+  }
+  .fi > label {
+    width: 96px; flex: 0 0 96px; text-align: right; padding-right: 10px;
+    color: var(--text-regular); font-size: 13px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .fi-controls { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; }
+
+  .el-input, .el-select {
+    height: 30px; padding: 0 9px;
+    border: 1px solid var(--border); border-radius: 3px;
+    background: #fff; font-size: 12px; color: var(--text-regular);
+    outline: none; transition: border-color .2s;
+    width: 100%; min-width: 0;
+  }
+  .el-select {
+    appearance: none; padding-right: 26px; cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23C0C4CC'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 9px center;
+  }
+  .el-input:hover, .el-select:hover { border-color: var(--text-secondary); }
+  .el-input:focus, .el-select:focus { border-color: var(--primary); }
+  .el-input::placeholder { color: #C0C4CC; }
+  .input-icon-wrap { position: relative; flex: 1; min-width: 0; }
+  .input-icon-wrap .el-input { padding-left: 26px; }
+  .input-icon-wrap .prefix-icon { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #C0C4CC; pointer-events: none; }
+
+  .range-group { flex: 1; min-width: 0; display: flex; align-items: center; gap: 4px; }
+  .range-group .el-select { flex: 0 0 104px; }
+  .range-group .el-input { flex: 1; min-width: 0; }
+  .range-sep { color: #C0C4CC; font-size: 12px; flex: 0 0 auto; }
+
+  /* ===== 按钮 ===== */
+  .btn {
+    height: 30px; padding: 0 16px;
+    border: 1px solid var(--border); border-radius: 3px;
+    background: #fff; font-size: 13px; color: var(--text-regular);
+    cursor: pointer; display: inline-flex; align-items: center; gap: 5px;
+    transition: all .1s; white-space: nowrap;
+  }
+  .btn:hover { color: var(--primary-hover); border-color: var(--primary-hover); }
+  .btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); color: #fff; }
+  .filter-actions { display: flex; gap: 10px; padding-left: 96px; margin-top: 12px; }
+  .link-expand { background: transparent; border: none; color: var(--primary); cursor: pointer; font-size: 13px; padding: 0 4px; }
+  .link-expand:hover { color: var(--primary-hover); }
+
+  /* ===== 工具栏 ===== */
+  .table-toolbar {
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 10px; margin-bottom: 12px;
+  }
+  .toolbar-left { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn-sup {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 13px; height: 13px; border-radius: 50%;
+    background: #fff; color: var(--primary); font-size: 10px;
+    transform: scale(.85);
+  }
+  .sum-box { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-regular); }
+
+  /* ===== 表格 ===== */
+  .table-wrap { overflow-x: auto; }
+  .el-table { width: 100%; border-collapse: collapse; }
+  .el-table th {
+    background: #F5F7FA; color: var(--text-main); font-weight: 600;
+    text-align: left; padding: 9px 8px;
+    border-bottom: 1px solid var(--border-light);
+    white-space: nowrap; font-size: 12px;
+  }
+  .el-table th.num, .el-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .el-table td {
+    padding: 9px 8px;
+    border-bottom: 1px solid var(--border-light);
+    color: var(--text-regular); font-size: 12px; white-space: nowrap;
+  }
+  .el-table tbody tr { transition: background .15s; }
+  .el-table tbody tr:hover td { background: #F5F7FA; }
+  .amount { color: var(--primary); }
+  .amount.zero, .zero { color: var(--text-secondary); }
+  .cell-empty { color: #C0C4CC; }
+
+  /* 复选框 */
+  .el-checkbox {
+    width: 14px; height: 14px;
+    appearance: none;
+    border: 1px solid var(--border); border-radius: 2px;
+    background: #fff; cursor: pointer;
+    display: inline-block; vertical-align: middle; position: relative;
+  }
+  .el-checkbox:checked { background: var(--primary); border-color: var(--primary); }
+  .el-checkbox:checked::after {
+    content: '';
+    position: absolute; left: 4px; top: 1px;
+    width: 4px; height: 8px;
+    border: solid #fff; border-width: 0 1.5px 1.5px 0;
+    transform: rotate(45deg);
+  }
+
+  /* 状态标签 */
+  .el-tag {
+    display: inline-block; padding: 2px 8px; border-radius: 3px;
+    font-size: 12px; line-height: 1.4; border: 1px solid; white-space: nowrap;
+  }
+  .el-tag.success { background: #F0F9EB; color: var(--success); border-color: #C2E7B0; }
+  .el-tag.danger  { background: #FEF0F0; color: var(--danger);  border-color: #FBC4C4; }
+  .el-tag.warning { background: #FDF6EC; color: var(--warning); border-color: #F5DAB1; }
+  .el-tag.info    { background: #F4F4F5; color: #909399;    border-color: #D3D4D6; }
+  .el-tag.blue    { background: var(--primary-light); color: var(--primary); border-color: #B3D8FF; }
+  .el-tag.violet  { background: #F3E8FF; color: #8E44D8; border-color: #D9C2F0; }
+
+  /* 操作链接 */
+  .op-link { color: var(--primary); text-decoration: none; cursor: pointer; margin-right: 8px; font-size: 12px; }
+  .op-link:hover { color: var(--primary-hover); }
+  .op-more { color: var(--primary); cursor: pointer; font-size: 12px; }
+
+  .th-setting { cursor: pointer; margin-left: 8px; font-size: 14px; color: var(--text-secondary); }
+  .th-setting:hover { color: var(--primary); }
+
+  /* ===== 字段选择弹出层（操作列齿轮） ===== */
+  .col-pop {
+    position: fixed;
+    width: 250px;
+    background: #fff;
+    border: 1px solid var(--border-light);
+    border-radius: 4px;
+    box-shadow: 0 4px 16px rgba(0,0,0,.12);
+    z-index: 2000;
+    display: none;
+  }
+  .col-pop.open { display: block; }
+  .col-pop .cp-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-light);
+    font-size: 13px; font-weight: 600; color: var(--text-main);
+  }
+  .col-pop .cp-head .cp-count { font-size: 12px; font-weight: 400; color: var(--text-secondary); }
+  .col-pop .cp-list { max-height: 280px; overflow-y: auto; padding: 4px 0; }
+  .col-pop .cp-list::-webkit-scrollbar { width: 4px; }
+  .col-pop .cp-list::-webkit-scrollbar-thumb { background: #DCDFE6; border-radius: 2px; }
+  .col-pop .cp-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 14px; font-size: 12px; color: var(--text-regular);
+    cursor: pointer; white-space: nowrap; overflow: hidden;
+  }
+  .col-pop .cp-item:hover { background: #F5F7FA; }
+  .col-pop .cp-foot {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 14px;
+    border-top: 1px solid var(--border-light);
+  }
+  .cp-link { color: var(--primary); cursor: pointer; font-size: 12px; margin-right: 12px; }
+  .cp-link:hover { color: var(--primary-hover); }
+  .cp-done {
+    height: 24px; padding: 0 12px;
+    background: var(--primary); border: none; border-radius: 3px;
+    color: #fff; font-size: 12px; cursor: pointer;
+  }
+  .cp-done:hover { background: var(--primary-hover); }
+
+  /* ===== 合计金额弹窗 ===== */
+  .sum-dialog-mask {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.5);
+    display: none;
+    align-items: flex-start;
+    justify-content: center;
+    z-index: 2100;
+    padding: 10vh 16px 16px;
+    overflow-y: auto;
+  }
+  .sum-dialog-mask.open { display: flex; }
+  .sum-dialog {
+    width: 560px; max-width: 100%;
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.2);
+    animation: dlg-in .2s ease-out;
+  }
+  @keyframes dlg-in { from { transform: translateY(-14px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .sd-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .sd-title { font-size: 15px; font-weight: 600; color: var(--text-main); }
+  .sd-close {
+    border: none; background: transparent;
+    font-size: 18px; color: var(--text-secondary);
+    cursor: pointer; width: 26px; height: 26px;
+    border-radius: 4px; line-height: 1;
+  }
+  .sd-close:hover { color: var(--text-main); background: #F5F7FA; }
+  .sd-body { padding: 14px 18px 4px; max-height: 62vh; overflow-y: auto; }
+  .sd-table { width: 100%; border-collapse: collapse; }
+  .sd-table th {
+    background: #E9EBF8;
+    color: var(--text-main);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-light);
+    white-space: nowrap;
+  }
+  .sd-table th.num { text-align: right; }
+  .sd-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-light);
+    font-size: 13px;
+    color: var(--text-regular);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .sd-table td.num { text-align: right; }
+  .sd-table tbody tr { transition: background .15s; }
+  .sd-table tbody tr:hover td { background: #F5F7FA; }
+  .sd-table tr.sd-sum td { background: #F0F1F9; font-weight: 600; color: var(--text-main); }
+  .sd-footer { display: flex; justify-content: center; padding: 14px 0 18px; }
+
+  /* ===== 分页 ===== */
+  .pagination {
+    display: flex; align-items: center; gap: 6px;
+    margin-top: 14px; color: var(--text-regular); font-size: 13px; flex-wrap: wrap;
+  }
+  .pg-sizes { display: flex; align-items: center; gap: 6px; margin-left: 10px; }
+  .pg-sizes .el-select { width: 88px; flex: 0 0 88px; }
+  .pg-btn {
+    min-width: 28px; height: 28px;
+    border: 1px solid var(--border); border-radius: 3px;
+    background: #fff; color: var(--text-regular); font-size: 13px;
+    cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+    padding: 0 6px; transition: all .15s;
+  }
+  .pg-btn:hover:not(:disabled):not(.active) { color: var(--primary); border-color: var(--primary); }
+  .pg-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; cursor: default; }
+  .pg-btn:disabled { color: #C0C4CC; cursor: not-allowed; background: #F5F7FA; }
+  .pg-jumper { margin-left: 8px; display: flex; align-items: center; gap: 5px; }
+  .pg-jumper input {
+    width: 42px; height: 26px;
+    border: 1px solid var(--border); border-radius: 3px;
+    text-align: center; outline: none; font-size: 12px;
+  }
+  .pg-jumper input:focus { border-color: var(--primary); }
+  .pg-dots { color: var(--text-secondary); }
+
+  /* ===== 空状态 ===== */
+  .empty-state {
+    background: #fff; border-radius: 4px;
+    padding: 80px 16px; text-align: center;
+    color: var(--text-secondary);
+    box-shadow: 0 1px 3px rgba(0,0,0,.05);
+  }
+  .empty-state .es-icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-state .es-title { font-size: 14px; color: var(--text-regular); }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ===== 可折叠侧边栏 ===== -->
+  <aside class="sider" id="sider">
+    <div class="sider-logo">
+      <div class="logo-icon">F</div>
+      <div class="logo-text">FPS</div>
+    </div>
+    <ul class="sider-menu">
+      <li class="menu-item active" data-view="aging" title="客户逾期账龄表">
+        <div class="mi-row" onclick="switchView('aging')">
+          <i class="mi-icon">📊</i><span class="mi-text">客户逾期账龄表</span>
+        </div>
+      </li>
+      <li class="menu-item" data-view="offset" title="逾期账单抵减明细">
+        <div class="mi-row" onclick="switchView('offset')">
+          <i class="mi-icon">🧾</i><span class="mi-text">逾期账单抵减明细</span>
+        </div>
+      </li>
+      <li class="menu-item" data-view="process" title="逾期账单抵减过程">
+        <div class="mi-row" onclick="switchView('process')">
+          <i class="mi-icon">🔁</i><span class="mi-text">逾期账单抵减过程</span>
+        </div>
+      </li>
+    </ul>
+    <div class="sider-footer" id="collapseBtn" title="收起菜单">⟨</div>
+  </aside>
+
+  <!-- ===== 右侧主区域 ===== -->
+  <div class="main">
+    <div class="header">
+      <div class="breadcrumb">
+        <span>首页</span><span class="sep">/</span><span>报表中心</span><span class="sep">/</span><span class="cur" id="crumbCur">客户逾期账龄表</span>
+      </div>
+      <div class="header-right">
+        <span class="header-icon" title="消息">🔔<span class="badge">3</span></span>
+        <span class="header-icon" title="帮助">❓</span>
+        <div class="user-info">
+          <div class="avatar">张</div>
+          <span class="user-name">张财务</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="page">
+
+      <!-- ================================================== -->
+      <!-- 视图一：客户逾期账龄表 -->
+      <!-- ================================================== -->
+      <div class="view active" id="view-aging">
+
+        <!-- 筛选区 -->
+        <div class="card">
+          <div class="card-body">
+
+            <div class="seg-row">
+              <span class="seg-label">状态:</span>
+              <div class="seg-group">
+                <button class="seg-btn active" onclick="segPick(this)">全部</button>
+                <button class="seg-btn" onclick="segPick(this)">成功</button>
+                <button class="seg-btn" onclick="segPick(this)">处理中</button>
+                <button class="seg-btn" onclick="segPick(this)">失败</button>
+              </div>
+            </div>
+            <div class="seg-row">
+              <span class="seg-label">同步状态:</span>
+              <div class="seg-group">
+                <button class="seg-btn active" onclick="segPick(this)">全部</button>
+                <button class="seg-btn" onclick="segPick(this)">未同步</button>
+                <button class="seg-btn" onclick="segPick(this)">同步成功</button>
+                <button class="seg-btn" onclick="segPick(this)">同步失败</button>
+              </div>
+            </div>
+
+            <div class="filter-grid adv-collapsed">
+              <div class="fi">
+                <label>编码:</label>
+                <div class="fi-controls">
+                  <div class="range-group">
+                    <select class="el-select" id="fCodeField">
+                      <option value="0">客户编码</option>
+                      <option value="13">客户代码</option>
+                      <option value="14">主客户代码</option>
+                    </select>
+                    <input type="text" class="el-input" id="fCode" placeholder="多个以分号隔开，最多200个">
+                  </div>
+                </div>
+              </div>
+              <div class="fi">
+                <label>签约主体:</label>
+                <div class="fi-controls">
+                  <input type="text" class="el-input" placeholder="请输入签约主体">
+                </div>
+              </div>
+              <div class="fi">
+                <label>服务主体:</label>
+                <div class="fi-controls">
+                  <select class="el-select"><option value="">请选择服务主体</option><option>ETARGET LIMITED</option><option>US ELOGISTICS SERVICE CORP</option><option>深圳易可达科技有限公司</option><option>CIRRO FULFILLMENT MEXICO</option></select>
+                </div>
+              </div>
+              <div class="fi">
+                <label>客户星级:</label>
+                <div class="fi-controls">
+                  <select class="el-select" id="fStar"><option value="">请选择客户星级</option><option>1</option><option>3</option></select>
+                </div>
+              </div>
+
+              <div class="fi">
+                <label>代码:</label>
+                <div class="fi-controls">
+                  <div class="range-group">
+                    <select class="el-select" id="fRepField">
+                      <option value="10">销售代表</option>
+                      <option value="11">客服代表</option>
+                      <option value="12">财务代表</option>
+                    </select>
+                    <input type="text" class="el-input" id="fRep" placeholder="多个以分号隔开，最多100个">
+                  </div>
+                </div>
+              </div>
+              <div class="fi">
+                <label>签约业务:</label>
+                <div class="fi-controls">
+                  <select class="el-select" id="fBiz"><option value="">请选择签约业务</option><option>海外仓储</option><option>中转代发</option><option>转运业务</option></select>
+                </div>
+              </div>
+              <div class="fi">
+                <label>客户体量(万元):</label>
+                <div class="fi-controls">
+                  <div class="range-group">
+                    <input type="text" class="el-input" placeholder="最小值">
+                    <span class="range-sep">-</span>
+                    <input type="text" class="el-input" placeholder="最大值">
+                  </div>
+                </div>
+              </div>
+              <div class="fi">
+                <label>逾期天数上限 <span class="fi-tip" title="按所选账龄区间过滤，区间为该账户最大逾期天数">?</span>:</label>
+                <div class="fi-controls">
+                  <div class="range-group">
+                    <select class="el-select"><option>逾期1-30天</option><option>逾期31-60天</option><option>逾期61-90天</option><option>逾期91-180天</option><option>逾期181-360天</option><option>逾期360天以上</option></select>
+                    <input type="text" class="el-input" placeholder="最小值">
+                    <span class="range-sep">-</span>
+                    <input type="text" class="el-input" placeholder="最大值">
+                  </div>
+                </div>
+              </div>
+
+              <div class="fi">
+                <label>逾期金额:</label>
+                <div class="fi-controls">
+                  <div class="range-group">
+                    <select class="el-select"><option value="">请选择天数</option><option>大于</option><option>小于</option><option>介于</option></select>
+                    <input type="text" class="el-input" placeholder="最小值">
+                    <span class="range-sep">-</span>
+                    <input type="text" class="el-input" placeholder="最大值">
+                  </div>
+                </div>
+              </div>
+              <div class="fi">
+                <label>付款期限:</label>
+                <div class="fi-controls">
+                  <input type="text" class="el-input" placeholder="请输入付款期限">
+                </div>
+              </div>
+              <div class="fi">
+                <label>销售区域:</label>
+                <div class="fi-controls">
+                  <select class="el-select" id="fArea"><option value="">请选择销售区域</option><option>美洲销售组</option><option>战略客户部</option><option>华北区</option><option>广佛区</option><option>华东区</option><option>品牌客户组</option><option>英国销售组</option><option>默认销售区域</option><option>测试专用产品业务勿用</option></select>
+                </div>
+              </div>
+              <div class="fi">
+                <label>信用管控方式:</label>
+                <div class="fi-controls">
+                  <select class="el-select" id="fCredit"><option value="">请选择信用管控方式</option><option>额度管控</option><option>账期管控</option></select>
+                </div>
+              </div>
+
+              <div class="fi">
+                <label>客户标识:</label>
+                <div class="fi-controls">
+                  <select class="el-select" id="fCustFlag"><option value="">请选择客户标识</option><option>正式客户</option><option>内部客户</option><option>非正式客户</option></select>
+                </div>
+              </div>
+              <div class="fi">
+                <label>审核状态:</label>
+                <div class="fi-controls">
+                  <select class="el-select" id="fAudit"><option value="">请选择审核状态</option><option>审核通过</option><option>停用</option></select>
+                </div>
+              </div>
+              <div class="fi">
+                <label>保管类型:</label>
+                <div class="fi-controls">
+                  <select class="el-select"><option value="">请选择保管类型</option><option>类型A</option><option>类型B</option></select>
+                </div>
+              </div>
+              <div class="fi">
+                <label>时间:</label>
+                <div class="fi-controls">
+                  <div class="range-group">
+                    <select class="el-select"><option>更新时间</option><option>同步时间</option></select>
+                    <input type="date" class="el-input" value="2026-11-12">
+                    <span class="range-sep">-</span>
+                    <input type="date" class="el-input" value="2026-11-12">
+                  </div>
+                </div>
+              </div>
+
+              <div class="fi">
+                <label>白名单类型:</label>
+                <div class="fi-controls">
+                  <select class="el-select"><option value="">请选择白名单类型</option><option>白名单</option><option>非白名单</option></select>
+                </div>
+              </div>
+            </div>
+
+            <div class="filter-actions">
+              <button class="btn btn-primary" onclick="cur.doSearch()">查 询</button>
+              <button class="btn" onclick="cur.doReset()">重 置</button>
+              <button class="link-expand" onclick="toggleAdvanced(this)">展开高级查询 ∨</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 表格区 -->
+        <div class="card">
+          <div class="card-body">
+            <div class="table-toolbar">
+              <div class="toolbar-left">
+                <button class="btn btn-primary" onclick="alert('原型演示：手动执行账龄计算')">手动执行<span class="btn-sup">1</span></button>
+                <button class="btn btn-primary" onclick="alert('原型演示：手动同步')">手动同步<span class="btn-sup">2</span></button>
+                <button class="btn btn-primary" onclick="alert('原型演示：批量重试')">批量重试<span class="btn-sup">3</span></button>
+                <button class="btn btn-primary" onclick="alert('原型演示：导出 Excel')">⬇ 导出</button>
+                <button class="btn btn-primary" onclick="alert('原型演示：一键查看原文')">一键查看原文</button>
+              </div>
+              <div class="sum-box">
+                <button class="btn btn-primary" onclick="openSumDialog()">逾期合计金额</button>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table class="el-table">
+                <thead id="aHead"></thead>
+                <tbody id="aBody"></tbody>
+              </table>
+            </div>
+
+            <!-- 分页 -->
+            <div class="pagination">
+              <span id="aPgTotal"></span>
+              <div class="pg-sizes">
+                <select class="el-select" id="aPgSize" onchange="cur.changeSize(this)">
+                  <option value="10">10条/页</option>
+                  <option value="20">20条/页</option>
+                  <option value="50">50条/页</option>
+                  <option value="100">100条/页</option>
+                </select>
+              </div>
+              <button class="pg-btn" id="aPgPrev" onclick="cur.goPage(-1)">上一页</button>
+              <span id="aPgPages"></span>
+              <button class="pg-btn" id="aPgNext" onclick="cur.goPage(1)">下一页</button>
+              <div class="pg-jumper">
+                <span>前往</span><input type="number" min="1" id="aPgJump" value="1"><span>页</span>
+                <button class="btn" style="height:26px;padding:0 10px;" onclick="cur.goPage()">GO</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================================================== -->
+      <!-- 视图二：逾期账单抵减明细 -->
+      <!-- ================================================== -->
+      <div class="view" id="view-offset">
+
+        <!-- 筛选区 -->
+        <div class="card">
+          <div class="card-body">
+
+            <div class="seg-row">
+              <span class="seg-label">状态:</span>
+              <div class="seg-group">
+                <button class="seg-btn active" onclick="segPick(this)">全部</button>
+                <button class="seg-btn" onclick="segPick(this)">成功</button>
+                <button class="seg-btn" onclick="segPick(this)">处理中</button>
+                <button class="seg-btn" onclick="segPick(this)">失败</button>
+              </div>
+            </div>
+
+            <div class="filter-grid adv-collapsed">
+              <div class="fi">
+                <label>账单号:</label>
+                <div class="fi-controls">
+                  <input type="text" class="el-input" id="oBillNo" placeholder="多个以分号隔开，最多200个">
+                </div>
+              </div>
+              <div class="fi">
+                <label>客户代码:</label>
+                <div class="fi-controls">
+                  <input type="text" class="el-input" id="oCustCode" placeholder="多个以分号隔开，最多200个">
+                </div>
+              </div>
+              <div class="fi">
+                <label>账户编码:</label>
+                <div class="fi-controls">
+                  <input type="text" class="el-input" id="oAcctCode" placeholder="多个以分号隔开，最多200个">
+                </div>
+              </div>
+              <div class="fi">
+                <label>客户星级:</label>
+                <div class="fi-controls">
+                  <select class="el-select" id="oStar"><option value="">请选择客户星级</option><option>1</option><option>3</option></select>
+                </div>
+              </div>
+
+              <div class="fi">
+                <label>销售区域:</label>
+                <div class="fi-controls">
+                  <select class="el-select" id="oArea"><option value="">请选择销售区域</option><option>战略客户部</option><option>美洲销售组</option><option>华北区</option><option>华东区</option><option>广佛区</option><option>品牌客户组</option><option>英国销售组</option><option>默认销售区域</option><option>测试专用产品业务勿用</option></select>
+                </div>
+              </div>
+              <div class="fi">
+                <label>销售代表:</label>
+                <div class="fi-controls">
+                  <input type="text" class="el-input" id="oSalesRep" placeholder="请输入销售代表">
+                </div>
+              </div>
+              <div class="fi">
+                <label>账单币种:</label>
+                <div class="fi-controls">
+                  <select class="el-select" id="oCur"><option value="">请选择账单币种</option><option>CNY</option><option>EUR</option><option>USD</option><option>HKD</option><option>MXN</option><option>GBP</option><option>JPY</option></select>
+                </div>
+              </div>
+
+              <div class="fi">
+                <label>逾期天数:</label>
+                <div class="fi-controls">
+                  <div class="range-group">
+                    <input type="text" class="el-input" placeholder="最小值">
+                    <span class="range-sep">-</span>
+                    <input type="text" class="el-input" placeholder="最大值">
+                  </div>
+                </div>
+              </div>
+              <div class="fi">
+                <label>逾期金额(CNY):</label>
+                <div class="fi-controls">
+                  <div class="range-group">
+                    <input type="text" class="el-input" placeholder="最小值">
+                    <span class="range-sep">-</span>
+                    <input type="text" class="el-input" placeholder="最大值">
+                  </div>
+                </div>
+              </div>
+              <div class="fi">
+                <label>批次号:</label>
+                <div class="fi-controls">
+                  <input type="text" class="el-input" id="oBatchNo" placeholder="请输入批次号">
+                </div>
+              </div>
+              <div class="fi">
+                <label>时间:</label>
+                <div class="fi-controls">
+                  <div class="range-group">
+                    <select class="el-select"><option>更新时间</option></select>
+                    <input type="date" class="el-input" value="2026-11-12">
+                    <span class="range-sep">-</span>
+                    <input type="date" class="el-input" value="2026-11-12">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="filter-actions">
+              <button class="btn btn-primary" onclick="cur.doSearch()">查 询</button>
+              <button class="btn" onclick="cur.doReset()">重 置</button>
+              <button class="link-expand" onclick="toggleAdvanced(this)">展开高级查询 ∨</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 表格区 -->
+        <div class="card">
+          <div class="card-body">
+            <div class="table-toolbar">
+              <div class="toolbar-left">
+                <button class="btn btn-primary" onclick="alert('原型演示：手动执行')">手动执行<span class="btn-sup">1</span></button>
+                <button class="btn btn-primary" onclick="alert('原型演示：手动同步')">手动同步<span class="btn-sup">2</span></button>
+                <button class="btn btn-primary" onclick="alert('原型演示：批量重试')">批量重试<span class="btn-sup">3</span></button>
+                <button class="btn btn-primary" onclick="alert('原型演示：导出')">⬇ 导出</button>
+                <button class="btn btn-primary" onclick="alert('原型演示：一键查看原文')">一键查看原文</button>
+              </div>
+              <div class="sum-box">
+                <button class="btn btn-primary" onclick="openSumDialog()">合计金额</button>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table class="el-table">
+                <thead id="oHead"></thead>
+                <tbody id="oBody"></tbody>
+              </table>
+            </div>
+
+            <!-- 分页 -->
+            <div class="pagination">
+              <span id="oPgTotal"></span>
+              <div class="pg-sizes">
+                <select class="el-select" id="oPgSize" onchange="cur.changeSize(this)">
+                  <option value="10">10条/页</option>
+                  <option value="20">20条/页</option>
+                  <option value="50">50条/页</option>
+                  <option value="100">100条/页</option>
+                </select>
+              </div>
+              <button class="pg-btn" id="oPgPrev" onclick="cur.goPage(-1)">上一页</button>
+              <span id="oPgPages"></span>
+              <button class="pg-btn" id="oPgNext" onclick="cur.goPage(1)">下一页</button>
+              <div class="pg-jumper">
+                <span>前往</span><input type="number" min="1" id="oPgJump" value="1"><span>页</span>
+                <button class="btn" style="height:26px;padding:0 10px;" onclick="cur.goPage()">GO</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================================================== -->
+      <!-- 视图三：逾期账单抵减过程 -->
+      <!-- ================================================== -->
+      <div class="view" id="view-process">
+
+        <!-- 筛选区 -->
+        <div class="card">
+          <div class="card-body">
+
+            <div class="seg-row">
+              <span class="seg-label">单据类型:</span>
+              <div class="seg-group" id="procTypeSeg">
+                <button class="seg-btn active" onclick="segPick(this)">全部</button>
+                <button class="seg-btn" onclick="segPick(this)">正数账单</button>
+                <button class="seg-btn" onclick="segPick(this)">负数账单</button>
+                <button class="seg-btn" onclick="segPick(this)">充值单</button>
+                <button class="seg-btn" onclick="segPick(this)">宽限单</button>
+              </div>
+            </div>
+            <div class="seg-row">
+              <span class="seg-label">抵减状态:</span>
+              <div class="seg-group" id="procStatusSeg">
+                <button class="seg-btn active" onclick="segPick(this)">全部</button>
+                <button class="seg-btn" onclick="segPick(this)">未抵减</button>
+                <button class="seg-btn" onclick="segPick(this)">部分抵减</button>
+                <button class="seg-btn" onclick="segPick(this)">已抵完</button>
+                <button class="seg-btn" onclick="segPick(this)">不抵减</button>
+              </div>
+            </div>
+
+            <div class="filter-grid">
+              <div class="fi">
+                <label>单据编号:</label>
+                <div class="fi-controls">
+                  <input type="text" class="el-input" id="pDocNo" placeholder="请输入单据编号">
+                </div>
+              </div>
+              <div class="fi">
+                <label>币种:</label>
+                <div class="fi-controls">
+                  <select class="el-select" id="pDocCur"><option value="">请选择币种</option><option>CNY</option><option>USD</option><option>EUR</option><option>JPY</option><option>HKD</option></select>
+                </div>
+              </div>
+              <div class="fi">
+                <label>逾期天数:</label>
+                <div class="fi-controls">
+                  <div class="range-group">
+                    <input type="text" class="el-input" id="pDocDayMin" placeholder="最小值">
+                    <span class="range-sep">-</span>
+                    <input type="text" class="el-input" id="pDocDayMax" placeholder="最大值">
+                  </div>
+                </div>
+              </div>
+              <div class="fi">
+                <label>抵减类型:</label>
+                <div class="fi-controls">
+                  <select class="el-select" id="pEvType"><option value="">请选择抵减类型</option><option>负数账单</option><option>充值单</option><option>宽限单</option></select>
+                </div>
+              </div>
+
+              <div class="fi">
+                <label>来源单据:</label>
+                <div class="fi-controls">
+                  <input type="text" class="el-input" id="pEvSrc" placeholder="请输入来源单据编号">
+                </div>
+              </div>
+              <div class="fi">
+                <label>目标账单:</label>
+                <div class="fi-controls">
+                  <input type="text" class="el-input" id="pEvTarget" placeholder="请输入目标账单编号">
+                </div>
+              </div>
+            </div>
+
+            <div class="filter-actions">
+              <button class="btn btn-primary" onclick="cur.doSearch()">查 询</button>
+              <button class="btn" onclick="cur.doReset()">重 置</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 表格区 -->
+        <div class="card">
+          <div class="card-body">
+            <div class="table-toolbar">
+              <div class="toolbar-left">
+                <button class="btn btn-primary" onclick="alert('原型演示：手动执行抵减计算')">手动执行<span class="btn-sup">1</span></button>
+                <button class="btn btn-primary" onclick="alert('原型演示：手动同步')">手动同步<span class="btn-sup">2</span></button>
+                <button class="btn btn-primary" onclick="alert('原型演示：批量重试')">批量重试<span class="btn-sup">3</span></button>
+                <button class="btn btn-primary" onclick="alert('原型演示：导出 Excel')">⬇ 导出</button>
+                <button class="btn btn-primary" onclick="alert('原型演示：一键查看原文')">一键查看原文</button>
+              </div>
+              <div class="sum-box">
+                <button class="btn btn-primary" onclick="openSumDialog()">抵减金额合计</button>
+              </div>
+            </div>
+
+            <!-- 页内标签切换：单据列表 / 抵减过程记录 -->
+            <div class="seg-row">
+              <span class="seg-label">列表:</span>
+              <div class="seg-group tab-seg-group" id="procTabGroup">
+                <button class="seg-btn active" id="procTabDocs" onclick="switchProcTab('docs')">单据列表</button>
+                <button class="seg-btn" id="procTabEvents" onclick="switchProcTab('events')">抵减过程记录</button>
+              </div>
+            </div>
+
+            <!-- 单据列表 -->
+            <div id="procDocsBlock">
+              <div class="table-wrap">
+                <table class="el-table">
+                  <thead id="pDocHead"></thead>
+                  <tbody id="pDocBody"></tbody>
+                </table>
+              </div>
+              <div class="pagination">
+                <span id="pDocPgTotal"></span>
+                <div class="pg-sizes">
+                  <select class="el-select" id="pDocPgSize" onchange="cur.changeSize(this)">
+                    <option value="10">10条/页</option>
+                    <option value="20">20条/页</option>
+                    <option value="50">50条/页</option>
+                    <option value="100">100条/页</option>
+                  </select>
+                </div>
+                <button class="pg-btn" id="pDocPgPrev" onclick="cur.goPage(-1)">上一页</button>
+                <span id="pDocPgPages"></span>
+                <button class="pg-btn" id="pDocPgNext" onclick="cur.goPage(1)">下一页</button>
+                <div class="pg-jumper">
+                  <span>前往</span><input type="number" min="1" id="pDocPgJump" value="1"><span>页</span>
+                  <button class="btn" style="height:26px;padding:0 10px;" onclick="cur.goPage()">GO</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 抵减过程记录 -->
+            <div id="procEventsBlock" style="display:none;">
+              <div class="table-wrap">
+                <table class="el-table">
+                  <thead id="pEvHead"></thead>
+                  <tbody id="pEvBody"></tbody>
+                </table>
+              </div>
+              <div class="pagination">
+                <span id="pEvPgTotal"></span>
+                <div class="pg-sizes">
+                  <select class="el-select" id="pEvPgSize" onchange="cur.changeSize(this)">
+                    <option value="10">10条/页</option>
+                    <option value="20">20条/页</option>
+                    <option value="50">50条/页</option>
+                    <option value="100">100条/页</option>
+                  </select>
+                </div>
+                <button class="pg-btn" id="pEvPgPrev" onclick="cur.goPage(-1)">上一页</button>
+                <span id="pEvPgPages"></span>
+                <button class="pg-btn" id="pEvPgNext" onclick="cur.goPage(1)">下一页</button>
+                <div class="pg-jumper">
+                  <span>前往</span><input type="number" min="1" id="pEvPgJump" value="1"><span>页</span>
+                  <button class="btn" style="height:26px;padding:0 10px;" onclick="cur.goPage()">GO</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 字段选择弹出层（点击操作列齿轮） ===== -->
+<div class="col-pop" id="colPop">
+  <div class="cp-head">
+    <span>自定义展示字段</span>
+    <span class="cp-count" id="cpCount"></span>
+  </div>
+  <div class="cp-list" id="cpList"></div>
+  <div class="cp-foot">
+    <span>
+      <a class="cp-link" onclick="colSelAll()">全选</a>
+      <a class="cp-link" onclick="colReset()">恢复默认</a>
+    </span>
+    <button class="cp-done" onclick="closeColPop()">完成</button>
+  </div>
+</div>
+
+<!-- ===== 合计金额弹窗 ===== -->
+<div class="sum-dialog-mask" id="sumDialog">
+  <div class="sum-dialog">
+    <div class="sd-header">
+      <span class="sd-title" id="sumDialogTitle">合计金额</span>
+      <button class="sd-close" onclick="closeSumDialog()">✕</button>
+    </div>
+    <div class="sd-body">
+      <table class="sd-table">
+        <thead>
+          <tr>
+            <th style="width:72px;">序号</th>
+            <th class="num">金额</th>
+            <th class="num">本位币金额</th>
+          </tr>
+        </thead>
+        <tbody id="sumDialogBody"></tbody>
+        <tfoot>
+          <tr class="sd-sum">
+            <td>合计</td>
+            <td class="num"></td>
+            <td class="num" id="sumDialogTotal">--</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <div class="sd-footer">
+      <button class="btn btn-primary" onclick="closeSumDialog()">返 回</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 抵减明细弹窗（单据列表行联动，view-process 专用） ===== -->
+<div class="sum-dialog-mask" id="procDialog">
+  <div class="sum-dialog" style="width:820px;">
+    <div class="sd-header">
+      <span class="sd-title" id="procDialogTitle">抵减明细</span>
+      <button class="sd-close" onclick="closeProcDialog()">✕</button>
+    </div>
+    <div class="sd-body">
+      <table class="sd-table">
+        <thead>
+          <tr>
+            <th style="width:64px;">序号</th>
+            <th style="width:110px;">抵减类型</th>
+            <th>来源单据</th>
+            <th>目标账单</th>
+            <th class="num">本次抵减金额(CNY)</th>
+            <th class="num">来源剩余(CNY)</th>
+            <th class="num">账单剩余(CNY)</th>
+          </tr>
+        </thead>
+        <tbody id="procDialogBody"></tbody>
+        <tfoot>
+          <tr class="sd-sum">
+            <td colspan="4">被抵减金额合计</td>
+            <td class="num" id="procDialogTotal">--</td>
+            <td colspan="2"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <div class="sd-footer">
+      <button class="btn btn-primary" onclick="closeProcDialog()">返 回</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== 侧边栏折叠 ===== */
+var sider = document.getElementById('sider');
+var collapseBtn = document.getElementById('collapseBtn');
+collapseBtn.addEventListener('click', function () {
+  sider.classList.toggle('collapsed');
+  collapseBtn.textContent = sider.classList.contains('collapsed') ? '⟩' : '⟨';
+  collapseBtn.title = sider.classList.contains('collapsed') ? '展开菜单' : '收起菜单';
+});
+
+/* ===== 通用工具 ===== */
+function fmtNum(v, dec) {
+  dec = dec || 2;
+  if (v === '' || v === null || v === undefined) return '<span class="zero">--</span>';
+  var n = Number(v);
+  var s = n.toLocaleString('zh-CN', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+  return n === 0 ? '<span class="zero">' + s + '</span>'
+                 : '<span class="amount">' + (n < 0 ? '-' + s.replace('-', '') : s) + '</span>';
+}
+function fmtText(v) {
+  if (v === '' || v === null || v === undefined) return '<span class="cell-empty">--</span>';
+  return String(v);
+}
+function tag(v, cls) { return '<span class="el-tag ' + cls + '">' + v + '</span>'; }
+
+/* ===== 分段按钮组单选 ===== */
+function segPick(btn) {
+  btn.parentElement.querySelectorAll('.seg-btn').forEach(function (b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+}
+
+/* ===== 高级查询展开/收起 ===== */
+function toggleAdvanced(btn) {
+  var grid = btn.closest('.filter-grid');
+  if (!grid) return;
+  var collapsed = grid.classList.toggle('adv-collapsed');
+  btn.textContent = collapsed ? '展开高级查询 ∨' : '收起高级查询 ∧';
+}
+
+/* ======================================================
+   页面工厂：每个视图一个独立页面实例（表格/分页/字段自定义/筛选）
+   ====================================================== */
+function createPage(opts) {
+  var p = {
+    key: opts.key,
+    COLS: opts.COLS,
+    DEFAULT_VISIBLE: opts.DEFAULT_VISIBLE,
+    visibleKeys: opts.DEFAULT_VISIBLE.slice(),
+    rows: opts.rows,
+    filtered: opts.rows.slice(),
+    page: 1,
+    pageSize: 10,
+    el: opts.el,
+    cellHtml: opts.cellHtml,
+    sumTitle: opts.sumTitle,
+    sumData: opts.sumData,
+    opHtml: opts.opHtml,
+    applyFilters: opts.applyFilters
+  };
+
+  p.visibleCols = function () {
+    return p.COLS.filter(function (c) { return p.visibleKeys.indexOf(c.k) > -1; });
+  };
+
+  p.render = function () {
+    var head = '<tr>'
+      + '<th style="width:36px;"><input type="checkbox" class="el-checkbox" onchange="toggleCheckAll(this)"></th>'
+      + '<th style="width:48px;">序号</th>';
+    p.visibleCols().forEach(function (c) {
+      head += '<th class="' + (c.num ? 'num' : '') + '" style="width:' + (c.w || 120) + 'px;">' + c.label + '</th>';
+    });
+    head += '<th style="width:200px;">操作<span class="th-setting" title="自定义展示字段" onclick="openColPop(event)">⚙</span></th></tr>';
+    document.getElementById(p.el.head).innerHTML = head;
+
+    var start = (p.page - 1) * p.pageSize;
+    var view = p.filtered.slice(start, start + p.pageSize);
+    var body = view.map(function (r, i) {
+      var tr = '<tr>'
+        + '<td><input type="checkbox" class="el-checkbox row-check"></td>'
+        + '<td>' + (start + i + 1) + '</td>';
+      p.visibleCols().forEach(function (c) {
+        tr += '<td class="' + (c.num ? 'num' : '') + '">' + p.cellHtml(c, r) + '</td>';
+      });
+      tr += '<td>' + (p.opHtml ? p.opHtml(r) :
+        '<a class="op-link" onclick="rowOp(\'查看原文\', this)">查看原文</a>'
+        + '<a class="op-link" onclick="rowOp(\'手动同步\', this)">手动同步</a>'
+        + '<a class="op-link" onclick="rowOp(\'重试\', this)">重试</a>'
+        + '<span class="op-more" onclick="rowOp(\'更多操作\', this)">更多 ▾</span>') + '</td></tr>';
+      return tr;
+    }).join('');
+    if (!view.length) {
+      var colspan = p.visibleCols().length + 3;
+      body = '<tr><td colspan="' + colspan + '" style="text-align:center;padding:48px 0;color:#909399;">暂无数据</td></tr>';
+    }
+    document.getElementById(p.el.body).innerHTML = body;
+
+    p.renderPagination();
+  };
+
+  p.renderPagination = function () {
+    var total = p.filtered.length;
+    var pages = Math.max(1, Math.ceil(total / p.pageSize));
+    if (p.page > pages) p.page = pages;
+
+    document.getElementById(p.el.pgTotal).innerHTML = '共 <b>' + total + '</b> 条';
+    var html = '';
+    for (var i = 1; i <= pages; i++) {
+      html += '<button class="pg-btn' + (i === p.page ? ' active' : '') + '" onclick="cur.goPage(' + i + ')">' + i + '</button>';
+    }
+    document.getElementById(p.el.pgPages).innerHTML = html;
+    document.getElementById(p.el.pgPrev).disabled = p.page <= 1;
+    document.getElementById(p.el.pgNext).disabled = p.page >= pages;
+    document.getElementById(p.el.pgJump).value = p.page;
+  };
+
+  /* step 为空时读取跳页输入框；-1/1 上一页/下一页；正数直达页码 */
+  p.goPage = function (step) {
+    var pages = Math.max(1, Math.ceil(p.filtered.length / p.pageSize));
+    var target = p.page;
+    if (step === undefined || step === null || step === '') {
+      target = Number(document.getElementById(p.el.pgJump).value) || 1;
+    } else if (step === -1 || step === 1) {
+      target = p.page + step;
+    } else {
+      target = Number(step) || 1;
+    }
+    p.page = Math.max(1, Math.min(pages, target));
+    p.render();
+    var wrap = document.querySelector('#view-' + p.key + ' .table-wrap');
+    if (wrap) wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  p.changeSize = function (sel) {
+    p.pageSize = Number(sel.value);
+    p.page = 1;
+    p.render();
+  };
+
+  p.doSearch = function () {
+    p.applyFilters();
+    p.page = 1;
+    p.render();
+  };
+
+  p.doReset = function () {
+    var view = document.getElementById('view-' + p.key);
+    view.querySelectorAll('.filter-grid input[type="text"]').forEach(function (i) { i.value = ''; });
+    view.querySelectorAll('.filter-grid input[type="date"]').forEach(function (i) { i.value = '2026-11-12'; });
+    view.querySelectorAll('.filter-grid .el-select').forEach(function (s) { s.selectedIndex = 0; });
+    view.querySelectorAll('.seg-group:not(.tab-seg-group)').forEach(function (g) {
+      g.querySelectorAll('.seg-btn').forEach(function (b, i) { b.classList.toggle('active', i === 0); });
+    });
+    p.filtered = p.rows.slice();
+    p.page = 1;
+    p.render();
+  };
+
+  return p;
+}
+
+/* ===== 行操作 / 全选 ===== */
+function rowOp(name, el) {
+  var code = el.closest('tr').children[2].textContent;
+  alert('原型演示：对「' + code + '」执行「' + name + '」');
+}
+function toggleCheckAll(master) {
+  master.closest('table').querySelectorAll('tbody .row-check').forEach(function (c) { c.checked = master.checked; });
+}
+
+/* ======================================================
+   视图一数据：客户逾期账龄表（42 字段 / 50 行）
+   ====================================================== */
+var AGING_COLS = [
+  { k:'acctCode',   label:'账户编码',        i:0 },
+  { k:'auditStatus',label:'审核状态',        i:1 },
+  { k:'stopType',   label:'停用类型',        i:2 },
+  { k:'signSubj',   label:'签约主体名称',    i:3, w:200 },
+  { k:'servSubj',   label:'服务主体名称',    i:4, w:220 },
+  { k:'custStar',   label:'客户星级',        i:5 },
+  { k:'signBiz',    label:'签约业务',        i:6 },
+  { k:'creditCtrl', label:'信用管控方式',    i:7 },
+  { k:'payCycle',   label:'付款周期',        i:8 },
+  { k:'salesArea',  label:'销售区域',        i:9, w:140 },
+  { k:'salesRep',   label:'销售代表',        i:10 },
+  { k:'servRep',    label:'客服代表',        i:11 },
+  { k:'finRep',     label:'财务代表',        i:12 },
+  { k:'custCode',   label:'客户代码',        i:13 },
+  { k:'mainCode',   label:'主客户代码',      i:14, w:110 },
+  { k:'whiteType',  label:'白名单类型',      i:15 },
+  { k:'custFlag',   label:'客户标识',        i:16 },
+  { k:'custVol',    label:'客户体量（万元）',i:17, num:true },
+  { k:'fixedLimit', label:'固定额度',        i:18, num:true },
+  { k:'tempLimit',  label:'临时额度',        i:19, num:true },
+  { k:'currency',   label:'币种',            i:20 },
+  { k:'tempGrace',  label:'临时宽限金额',    i:21, num:true },
+  { k:'remainGrace',label:'剩余宽限金额',    i:22, num:true },
+  { k:'graceStart', label:'临时宽限期开始',  i:23, w:140 },
+  { k:'graceEnd',   label:'临时宽限期结束',  i:24, w:140 },
+  { k:'recvTotal',  label:'应收金额合计',    i:25, num:true, w:130 },
+  { k:'notOvTotal', label:'未逾期合计',      i:26, num:true },
+  { k:'ovTotal',    label:'逾期合计',        i:27, num:true, w:120 },
+  { k:'d30',        label:'逾期1-30天',      i:28, num:true },
+  { k:'d60',        label:'逾期31-60天',     i:29, num:true },
+  { k:'d90',        label:'逾期61-90天',     i:30, num:true },
+  { k:'d180',       label:'逾期91-180天',    i:31, num:true },
+  { k:'d360',       label:'逾期181-360天',   i:32, num:true },
+  { k:'ov360',      label:'逾期360天以上',   i:33, num:true },
+  { k:'pending',    label:'待核销充值金额',  i:34, num:true, w:130 },
+  { k:'status',     label:'状态',            i:35 },
+  { k:'failReason', label:'失败原因',        i:36, w:180 },
+  { k:'updateTime', label:'更新时间',        i:37, w:140 },
+  { k:'operator',   label:'操作人',          i:38 },
+  { k:'syncStatus', label:'同步状态',        i:39 },
+  { k:'syncTime',   label:'同步时间',        i:40, w:140 },
+  { k:'syncFail',   label:'同步失败原因',    i:41, w:180 }
+];
+var AGING_DEFAULT = ['acctCode','custCode','mainCode','currency','tempGrace','remainGrace',
+  'recvTotal','notOvTotal','ovTotal','d30','d60','d90','d180','d360','ov360','pending','status'];
+var T1 = '2026/11/9 14:11', T2 = '2026/3/10 10:40', T3 = '2025/7/4 15:30';
+var AGING_ROWS = [
+  ['ACG15291721','审核通过','未停用','HOKIE','ETARGET LIMITED','1','海外仓储|','账期管控','1','美洲销售组','张三','李四','王五','G1529','G1529','','正式客户','--',0,0,'CNY',0,0,'','',-3224612.21,0,-3224612.21,-3224612.21,0,0,0,0,0,642501,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG562118','审核通过','未停用','Grupo Bimbo','CIRRO FULFILLMENT MEXICO','','海外仓储|','额度管控','0','战略客户部','张三','李四','王五','G562','G562','','正式客户','--',0,0,'CNY',0,0,'','',0,0,0,0,0,0,0,0,0,536649.72,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACEL284201','审核通过','未停用','Maixne','US ELOGISTICS SERVICE CORP','','海外仓储|','额度管控','0','美洲销售组','张三','李四','王五','EL2842','EL2842','','内部客户','0',0,0,'CNY',0,0,'','',602608.28,0,602608.28,602608.28,0,0,0,0,0,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG56203','停用','停用','中转和海外','ETARGET LIMITED','','海外仓储|','额度管控','0','战略客户部','张三','李四','王五','G562','G562','','正式客户','6.74',0,0,'CNY',0,0,'','',-7.14,0,-7.14,-7.14,0,0,0,0,0,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG15291712','审核通过','未停用','y:a li，n Eli；g.n,lo、lo。(kjhf);','US ELOGISTICS SERVICE CORP','1','中转代发|','账期管控','3','美洲销售组','张三','李四','王五','G1529','G1529','','正式客户','14995.21',0,0,'CNY',0,0,'','',344084.89,0,344084.89,37804.24,0,0,306280.65,0,0,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG308702','审核通过','未停用','123456','深圳易可达科技有限公司','','海外仓储|','额度管控','30','测试专用产品业务勿用','张三','李四','王五','G3087','G3087','','正式客户','0',0,0,'CNY',0,0,'','',5989604.29,0,5989604.29,28742.07,29768.57,30795.07,5900298.58,0,0,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG506703','审核通过','未停用','UK HAHAHA  LIMITED','Super Smart Service ltd','','海外仓储|','账期管控','30','华北区','张三','李四','王五','G5067','G5067','','正式客户','0.17',0,0,'CNY',0,0,'','',1713.83,0,1713.83,0,0,0,1713.83,0,0,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG508805','审核通过','未停用','美国测试公司','US ELOGISTICS SERVICE CORP','','海外仓储|','额度管控','0','华北区','张三','李四','王五','G5088','G5088','','正式客户','0.04',0,0,'CNY',0,0,'','',356.95,0,356.95,0,0,0,356.95,0,0,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG501710','停用','停用','R560CA002.INC','ZENDA LOGISTICS CORP.','','海外仓储|','账期管控','0','广佛区','张三','李四','王五','G5017','G5017','','正式客户','47.88',0,0,'CNY',0,0,'','',14340.25,0,14340.25,0,0,0,14340.25,0,0,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACTYY01','审核通过','未停用','LAUFUN','深圳易可达科技有限公司','','转运业务|','账期管控','10','默认销售区域','张三','李四','王五','TYY','TYY','','正式客户','0',644.14,0,'CNY',0,0,'','',4564726.74,0,4564726.74,0,0,0,4564726.74,0,0,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG15291713','停用','停用','y:a li，n Eli；g.n,lo、lo&(kjhf);','AURORA LOGISTICS SP??KA Z OGRANICZON? ODPOWIEDZIALNO?CI?','1','海外仓储|','账期管控','3','美洲销售组','张三','李四','王五','G1529','G1529','','正式客户','14995.21',0,0,'CNY',0,0,'','',8566.68,0,8566.68,0,0,0,0,0,8566.68,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG1529867','审核通过','未停用','Yuna-1111111','深圳易可达科技有限公司','1','中转代发|','账期管控','3','美洲销售组','张三','李四','王五','G1529','G1529','','正式客户','14995.21',0,0,'CNY',0,0,'','',3584430.93,0,3584430.93,0,0,0,3584430.93,0,0,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG15291703','停用','停用','Autotest2917414','深圳易可达科技有限公司','1','中转代发|','账期管控','5','美洲销售组','张三','李四','王五','G1529','G1529','','正式客户','14995.21',0,0,'CNY',0,0,'','',3692.78,0,3692.78,0,0,0,3692.78,0,0,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG129903','审核通过','未停用','海飞丝','深圳易可达科技有限公司','1','海外仓储|中转代发|','账期管控','5','默认销售区域','张三','李四','王五','G1299','G1299','','非正式客户','0.12',0,0,'CNY',0,0,'','',1228.72,0,1228.72,0,0,0,0,1228.72,0,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG134217','停用','停用','应该','深圳易可达科技有限公司','1','海外仓储|','额度管控','0','默认销售区域','张三','李四','王五','G1342','G1342','','正式客户','79592.95',0,0,'CNY',0,0,'','',130153634.3,0,130153634.3,0,0,0,0,130153634.3,0,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG15291701','停用','停用','Autotest2917414','深圳易可达科技有限公司','1','海外仓储|','账期管控','2','美洲销售组','张三','李四','王五','G1529','G1529','','正式客户','14995.21',0,0,'CNY',0,0,'','',21.93,0,21.93,0,0,0,0,21.93,0,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG176701','审核通过','未停用','深圳依时货拉拉','深圳易可达科技有限公司','1','海外仓储|中转代发|','额度管控','7','默认销售区域','张三','李四','王五','G1767','G1767','','正式客户','0.23',0,0,'CNY',0,0,'','',2347.2,0,2347.2,0,0,0,0,2347.2,0,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG152901','审核通过','未停用','真实影像','深圳易可达科技有限公司','1','海外仓储|','账期管控','3','美洲销售组','张三','李四','王五','G1529','G1529','','正式客户','14995.21',0,0,'CNY',0,0,'','',315803391.4,0,315803391.4,0,0,0,0,315803391.4,0,95382.84,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG501709','审核通过','未停用','R560JP.INC','22日発株式会社','','海外仓储|','账期管控','0','广佛区','张三','李四','王五','G5017','G5017','','正式客户','47.88',0,0,'CNY',0,0,'','',24.84,0,24.84,0,0,0,0,24.84,0,600216.92,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG130001','审核通过','未停用','纵腾网络','深圳易可达科技有限公司','1','海外仓储|','额度管控','7','默认销售区域','张三','李四','王五','G1300','G1300','','正式客户','2106.06',777.54,0,'CNY',0,0,'','',21060564.79,0,21060564.79,0,0,0,0,21060564.79,0,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG15291705','停用','停用','esigntest纵腾网络测试13','深圳易可达科技有限公司','1','海外仓储|','账期管控','4','美洲销售组','张三','李四','王五','G1529','G1529','','正式客户','14995.21',0,0,'CNY',0,0,'','',277615662.2,0,277615662.2,0,0,0,0,277615662.2,0,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG501705','审核通过','未停用','USTEST.INC','US ELOGISTICS SERVICE CORP','','中转代发|','账期管控','0','广佛区','张三','李四','王五','G5017','G5017','','正式客户','47.88',0,0,'CNY',0,0,'','',24.63,0,24.63,0,0,0,0,24.63,0,554.05,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG157301','审核通过','未停用','深圳市爱奇迹','ELOGISTICS (GA) SERVICE CORP','1','海外仓储|中转代发|','额度管控','7','默认销售区域','张三','李四','王五','G1573','G1573','','正式客户','41466.24',0,0,'CNY',0,0,'','',414662384.1,0,414662384.1,0,0,0,33455063.81,381207320.3,0,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG134560','审核通过','未停用','GD法国-徐州妙仕洁商贸有限公司','JS LOGISTICS','1','中转代发|','额度管控','0','测试专用产品业务勿用','张三','李四','王五','G1345','G5077','','正式客户','4.41',0,0,'CNY',0,0,'','',-46.76,0,-46.76,0,0,0,0,-46.76,0,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG134559','审核通过','未停用','GD日本 -广州市洁骅企业策划有限公司','22日発株式会社','1','中转代发|','额度管控','0','测试专用产品业务勿用','张三','李四','王五','G1345','G5077','','正式客户','4.41',0,0,'CNY',0,0,'','',87673.82,0,87673.82,0,0,0,101.8,87572.02,0,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG165001','审核通过','未停用','深圳市符音科','ETARGET LIMITED','1','海外仓储|中转代发|','额度管控','7','品牌客户组','张三','李四','王五','G1650','G1650','','正式客户','3.62',0,0,'CNY',0,0,'','',36222.43,0,36222.43,0,0,0,0,36222.43,0,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG501702','审核通过','未停用','CHANGLE.INC','深圳易可达科技有限公司','','海外仓储|','账期管控','0','广佛区','张三','李四','王五','G5017','G5017','','正式客户','47.88',0,0,'CNY',0,0,'','',943180.55,0,943180.55,0,0,0,0,943180.55,0,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACEL288501','审核通过','未停用','company2815','22日発株式会社','','海外仓储|','额度管控','0','美洲销售组','张三','李四','王五','EL2885','EL2885','','正式客户','0',0,0,'CNY',0,0,'','',429.56,429.56,0,0,0,0,0,0,0,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG518702','停用','停用','完美集团','US ELOGISTICS SERVICE CORP','','海外仓储|','账期管控','14','美洲销售组','张三','李四','王五','G5187','G5187','','内部客户','11.79',0,0,'CNY',0,0,'','',196988.16,0,196988.16,0,0,0,0,196988.16,0,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG562109','审核通过','未停用','ABC company','ELOGISTICS (GA) SERVICE CORP','','海外仓储|','额度管控','0','战略客户部','张三','李四','王五','G562','G562','','正式客户','6.74',0,0,'CNY',0,0,'','',329270.97,0,329270.97,0,0,0,145117.9,184153.07,0,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG562107','停用','停用','英国本土国家','Super Smart Service ltd','','海外仓储|','额度管控','0','战略客户部','张三','李四','王五','G562','G562','','正式客户','6.74',0,0,'CNY',0,0,'','',237587890.5,0,237587890.5,0,0,0,0,237587890.5,0,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG114910','审核通过','未停用','江西省韩记生鲜配送有限公司宋家坊店','深圳易可达科技有限公司','1','海外仓储|','账期管控','9','默认销售区域','张三','李四','王五','G1149','G1149','','正式客户','1637.77',0,0,'CNY',0,0,'','',117376740.6,0,117376740.6,97071336.19,0,0,16376375.11,3929029.31,0,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACTYKD30','审核通过','未停用','test080702121','ETARGET LIMITED','','转运业务|','额度管控','0','华东区','张三','李四','王五','TYKD','TYKD','','正式客户','90.95',0,0,'CNY',0,0,'','',204584.36,164206.17,40378.19,928.91,0,0,0,0,39449.28,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG506702','审核通过','未停用','US XIONGMAO INC','US ELOGISTICS SERVICE CORP','','海外仓储|','账期管控','30','华北区','张三','李四','王五','G5067','G5067','','正式客户','0.17',0,0,'CNY',0,0,'','',392.64,0,392.64,0,0,0,0,0,392.64,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG114911','审核通过','未停用','aaa','深圳易可达科技有限公司','1','中转代发|','额度管控','0','默认销售区域','张三','李四','王五','G1149','G1149','','正式客户','1637.77',0,0,'CNY',0,0,'','',14570.38,0,14570.38,0,0,0,0,0,14570.38,3366970.88,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG114901','审核通过','停用','test','深圳易可达科技有限公司','1','中转代发|','额度管控','7','默认销售区域','张三','李四','王五','G1149','G1149','','正式客户','1637.77',0,0,'CNY',0,0,'','',5111.75,0,5111.75,0,0,0,0,0,5111.75,-1467483.7,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG134569','审核通过','未停用','深圳市神舟电脑股份有限公司2','深圳易可达科技有限公司','1','海外仓储|','额度管控','0','测试专用产品业务勿用','张三','李四','王五','G1345','G5077','','正式客户','4.41',0,0,'CNY',0,0,'','',0,0,0,0,0,0,0,0,0,606.81,'成功','',T1,'系统','同步成功',T3,''],
+  ['ACEL12248','停用','停用','FSDFSF','ETARGET LIMITED','3','海外仓储|','额度管控','0','美洲销售组','张三','李四','王五','EL122','T16892959','','正式客户','310394.74',0,0,'CNY',0,0,'','',6006969.42,166887.82,5840081.6,0,0,0,111895.77,5728185.83,0,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACEL281601','审核通过','未停用','长乐项目验证','ETARGET LIMITED','','海外仓储|','额度管控','0','默认销售区域','张三','李四','王五','EL2816','EL2816','','正式客户','0',0,0,'CNY',0,0,'','',1079.16,1079.16,0,0,0,0,0,0,713.89,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG56281','停用','停用','福州市长乐区建设发展集团有限公司','深圳易可达科技有限公司','','海外仓储|','额度管控','0','战略客户部','张三','李四','王五','G562','G562','','正式客户','6.74',0,0,'CNY',0,0,'','',1769.95,0,1769.95,0,0,0,0,0,1769.95,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACT230701','审核通过','未停用','Yuna\'scompany12','深圳易可达科技有限公司','','转运业务|','额度管控','1','测试专用产品业务勿用','张三','李四','王五','T2307','T2307','','非正式客户','0',0,0,'CNY',0,0,'','',329.96,0,329.96,0,0,0,0,0,329.96,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG145302','审核通过','未停用','ababababab','深圳易可达科技有限公司','1','转运业务|','额度管控','30','默认销售区域','张三','李四','王五','G1453','G1453','','正式客户','0',32207,0,'CNY',0,0,'','',36451.51,0,36451.51,0,0,0,0,0,36451.51,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG296103','审核通过','未停用','SIGJH','深圳易可达科技有限公司','','转运业务|','额度管控','0','测试专用产品业务勿用','张三','李四','王五','G2961','G2961','','非正式客户','0',0,0,'CNY',0,0,'','',22306.85,0,22306.85,0,0,0,0,0,22306.85,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACTYKD27','停用','停用','三只松鼠股份有限公司','深圳市前海云途物流有限公司上海分公司','','转运业务|','额度管控','0','华东区','张三','李四','王五','TYKD','TYKD','','正式客户','90.95',0,0,'CNY',0,0,'','',-4136.75,-4136.75,0,0,0,0,0,0,0,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG126204','审核通过','未停用','esignt','深圳易可达科技有限公司','','海外仓储|','额度管控','7','测试专用产品业务勿用','张三','李四','王五','G1262','G1262','','正式客户','0',0,0,'CNY',0,0,'','',383335.01,0,383335.01,0,0,0,0,0,383335.01,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACEL263601','审核通过','未停用','B2OF','深圳易可达科技有限公司','','海外仓储|','额度管控','0','测试专用产品业务勿用','张三','李四','王五','EL2636','EL2636','','正式客户','0',0,0,'CNY',0,0,'','',1372307.05,1372307.05,0,0,0,0,0,0,0,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACEL255301','审核通过','未停用','SPS','ETARGET LIMITED','','海外仓储|','额度管控','30','美洲销售组','张三','李四','王五','EL2553','EL2553','','正式客户','0',64414,0,'CNY',0,0,'','',513814.44,513743.05,71.39,0,0,0,0,0,71.39,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACEL12239','停用','停用','Maxine-test-uat1','深圳易可达科技有限公司','3','海外仓储|','额度管控','0','美洲销售组','张三','李四','王五','EL122','T16892959','','正式客户','310394.74',0,0,'CNY',0,0,'','',364790405.5,364790405.5,0,0,0,0,0,0,0,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG134214','审核通过','未停用','adf','深圳易可达科技有限公司','1','海外仓储|','账期管控','30','英国销售组','张三','李四','王五','G1342','G1342','','正式客户','-4.18',0,0,'CNY',0,0,'','',19717448.46,0,19717448.46,0,0,0,0,0,19717448.46,-3807986.98,'失败','未查询到RMB的汇率',T1,'系统','同步成功',T2,''],
+  ['ACG126003','审核通过','未停用','abcABC','深圳易可达科技有限公司','','海外仓储|','额度管控','39','测试专用产品业务勿用','张三','李四','王五','G1260','G1260','','非正式客户','0',644.14,0,'CNY',0,0,'','',659079.31,0,659079.31,0,0,0,0,0,659079.31,0,'成功','',T1,'系统','同步成功',T1,'']
+];
+
+function agingCell(col, row) {
+  var v = row[col.i];
+  switch (col.k) {
+    case 'status':      return v === '成功' ? tag('成功','success') : v === '失败' ? tag('失败','danger') : fmtText(v);
+    case 'auditStatus': return v === '审核通过' ? tag('审核通过','success') : v === '停用' ? tag('停用','danger') : fmtText(v);
+    case 'syncStatus':  return v === '同步成功' ? tag('同步成功','success') : v === '同步失败' ? tag('同步失败','danger') : fmtText(v);
+  }
+  if (col.num) return fmtNum(v);
+  return fmtText(v);
+}
+
+/* 账龄表筛选逻辑 */
+function agingFilters() {
+  var res = AGING_ROWS.slice();
+  var kw = (gv('fCode'));
+  if (kw) {
+    var fIdx = Number(gv('fCodeField')) || 0;
+    var keys = kw.split(/[;；]/).map(function (s) { return s.trim().toUpperCase(); }).filter(Boolean);
+    res = res.filter(function (r) {
+      return keys.some(function (k) { return String(r[fIdx]).toUpperCase().indexOf(k) > -1; });
+    });
+  }
+  var rk = gv('fRep');
+  if (rk) {
+    var rIdx = Number(gv('fRepField')) || 10;
+    var rkeys = rk.split(/[;；]/).map(function (s) { return s.trim(); }).filter(Boolean);
+    res = res.filter(function (r) {
+      return rkeys.some(function (k) { return String(r[rIdx]).indexOf(k) > -1; });
+    });
+  }
+  [['fBiz', 6], ['fStar', 5], ['fArea', 9], ['fCredit', 7], ['fCustFlag', 16], ['fAudit', 1]]
+    .forEach(function (pair) {
+      var v = gv(pair[0]);
+      if (v) res = res.filter(function (r) { return String(r[pair[1]]).indexOf(v) > -1; });
+    });
+  return res;
+}
+function gv(id) {
+  var el = document.getElementById(id);
+  return el ? (el.value || '').trim() : '';
+}
+
+var AGING_SUM = [
+  [300,           'HKD', 273.54],
+  [2,             'TWD', 0.49],
+  [89883190.828,  'AUD', 440164999.38],
+  [1993.4,        'KRW', 11.16],
+  [157158.92,     'MXN', 65378.11],
+  [2289167045.541,'JPY', 115511464.04],
+  [-9221333.292,  'EUR', -71955021.43],
+  [134528991.48,  'GBP', 1255401476.70],
+  [107833.06,     'CAD', 580919.38],
+  [1073523405.74, 'USD', 7658051722.78],
+  [-14.14,        'THB', -2.91],
+  [100940582.58,  'CNY', 100940582.58]
+];
+
+/* ======================================================
+   视图二数据：逾期账单抵减明细（21 字段 / 1 行，来自 CSV）
+   ====================================================== */
+var OFFSET_COLS = [
+  { k:'billNo',    label:'账单号',           i:0,  w:170 },
+  { k:'custCode',  label:'客户代码',         i:1 },
+  { k:'acctCode',  label:'账户编码',         i:2,  w:110 },
+  { k:'signSubj',  label:'签约主体',         i:3,  w:120 },
+  { k:'servSubj',  label:'服务主体',         i:4,  w:220 },
+  { k:'custStar',  label:'客户星级',         i:5 },
+  { k:'salesArea', label:'销售区域',         i:6 },
+  { k:'salesRep',  label:'销售代表',         i:7 },
+  { k:'billCycle', label:'账单周期',         i:8,  w:260 },
+  { k:'billDate',  label:'账单账务日期',     i:9,  w:150 },
+  { k:'recvAge',   label:'应收账龄',         i:10 },
+  { k:'ovDays',    label:'逾期天数',         i:11 },
+  { k:'billCur',   label:'账单币种',         i:13 },
+  { k:'billAmt',   label:'账单金额(原币)',   i:14, num:true },
+  { k:'ovAmtO',    label:'逾期金额(原币)',   i:15, num:true },
+  { k:'rate',      label:'记账汇率',         i:16, num:true, dec:4 },
+  { k:'ovAmtC',    label:'逾期金额(CNY)',    i:17, num:true, w:130 },
+  { k:'offsetAmt', label:'抵减金额(CNY)',    i:-1, num:true, w:140 },
+  { k:'afterAmt',  label:'抵减后金额(CNY)',  i:18, num:true, w:140 },
+  { k:'updateTime',label:'更新时间',         i:19, w:140 },
+  { k:'batchNo',   label:'批次号',           i:20, w:150 }
+];
+var OFFSET_DEFAULT = ['billNo','custCode','acctCode','signSubj','servSubj','custStar','salesArea','salesRep',
+  'billCycle','billDate','recvAge','ovDays','billCur','billAmt','ovAmtO','rate','ovAmtC','offsetAmt','afterAmt','updateTime','batchNo'];
+var OFFSET_ROWS = [
+  ['B20261105G5620001','G562','ACG562118','Grupo Bimbo','CIRRO FULFILLMENT MEXICO','','战略客户部','宋江','2026-10-30 00:00:00至2026-11-04 23:59:59','2026/11/4 23:59','8','8','逾期','EUR',21.6,21.6,6.1523,168.57,0,'2026/11/12 21:55','DJPC20261109001'],
+  ['B20261106G15290002','G1529','ACG15291721','HOKIE','ETARGET LIMITED','1','美洲销售组','张三','2026-11-01 00:00:00至2026-11-06 23:59:59','2026/11/6 23:59','12','10','逾期','EUR',320.5,120.35,6.1523,740.44,740.44,'2026/11/12 21:58','DJPC20261109002'],
+  ['B20261106EL28420003','EL2842','ACEL284201','Maixne','US ELOGISTICS SERVICE CORP','','美洲销售组','李四','2026-11-01 00:00:00至2026-11-06 23:59:59','2026/11/6 23:59','15','12','逾期','USD',500,200,7.1311,1426.22,1426.22,'2026/11/12 22:03','DJPC20261109003'],
+  ['B20261107G30870004','G3087','ACG308702','123456','深圳易可达科技有限公司','','测试专用产品业务勿用','王五','2026-11-02 00:00:00至2026-11-07 23:59:59','2026/11/7 23:59','8','8','已抵减','CNY',5989.6,5989.6,1.0000,5989.60,0,'2026/11/12 22:17','DJPC20261109004'],
+  ['B20261107G50670005','G5067','ACG506703','UK HAHAHA  LIMITED','Super Smart Service ltd','','华北区','张三','2026-11-02 00:00:00至2026-11-07 23:59:59','2026/11/7 23:59','21','18','逾期','GBP',800,200,8.9542,1790.84,1790.84,'2026/11/12 22:31','DJPC20261109005'],
+  ['B20261108G50880006','G5088','ACG508805','美国测试公司','US ELOGISTICS SERVICE CORP','','华北区','李四','2026-11-03 00:00:00至2026-11-08 23:59:59','2026/11/8 23:59','356','300','逾期','USD',500,100,7.1311,713.11,713.11,'2026/11/12 22:45','DJPC20261109006'],
+  ['B20261108G50170007','G5017','ACG501710','R560CA002.INC','ZENDA LOGISTICS CORP.','','广佛区','王五','2026-11-03 00:00:00至2026-11-08 23:59:59','2026/11/8 23:59','45','40','已抵减','MXN',10000,10000,0.4180,4180.00,0,'2026/11/12 23:02','DJPC20261109007'],
+  ['B20261109TYY0008','TYY','ACTYY01','LAUFUN','深圳易可达科技有限公司','','默认销售区域','张三','2026-11-04 00:00:00至2026-11-09 23:59:59','2026/11/9 23:59','30','25','逾期','CNY',49547.26,49547.26,1.0000,49547.26,24773.63,'2026/11/12 23:18','DJPC20261109008'],
+  ['B20261109G12990009','G1299','ACG129903','海飞丝','深圳易可达科技有限公司','1','默认销售区域','李四','2026-11-04 00:00:00至2026-11-09 23:59:59','2026/11/9 23:59','5','3','逾期','CNY',1228.72,1228.72,1.0000,1228.72,1228.72,'2026/11/12 23:40','DJPC20261110001'],
+  ['B20261110G13420010','G1342','ACG134217','应该','深圳易可达科技有限公司','1','默认销售区域','王五','2026-11-05 00:00:00至2026-11-10 23:59:59','2026/11/10 23:59','90','88','已抵减','CNY',130153.63,130153.63,1.0000,130153.63,0,'2026/11/12 23:55','DJPC20261110002'],
+  ['B20261110G17670011','G1767','ACG176701','深圳依时货拉拉','深圳易可达科技有限公司','1','默认销售区域','张三','2026-11-05 00:00:00至2026-11-10 23:59:59','2026/11/10 23:59','12','10','逾期','EUR',250,50,6.1523,307.62,307.62,'2026/11/13 00:05','DJPC20261110003'],
+  ['B20261110G15730012','G1573','ACG157301','深圳市爱奇迹','ELOGISTICS (GA) SERVICE CORP','1','默认销售区域','李四','2026-11-05 00:00:00至2026-11-10 23:59:59','2026/11/10 23:59','60','55','逾期','USD',1250,1250,7.1311,8913.88,8913.88,'2026/11/13 00:12','DJPC20261110004'],
+  ['B20261111G13450013','G1345','ACG134560','GD法国-徐州妙仕洁商贸有限公司','JS LOGISTICS','1','测试专用产品业务勿用','王五','2026-11-06 00:00:00至2026-11-11 23:59:59','2026/11/11 23:59','18','15','已抵减','JPY',100000,100000,0.0505,5050.00,0,'2026/11/13 00:28','DJPC20261110005'],
+  ['B20261111G16500014','G1650','ACG165001','深圳市符音科','ETARGET LIMITED','1','品牌客户组','张三','2026-11-06 00:00:00至2026-11-11 23:59:59','2026/11/11 23:59','3','1','逾期','CNY',36222.43,36222.43,1.0000,36222.43,36222.43,'2026/11/13 00:35','DJPC20261110006'],
+  ['B20261111G11490015','G1149','ACG114910','江西省韩记生鲜配送有限公司宋家坊店','深圳易可达科技有限公司','1','默认销售区域','李四','2026-11-06 00:00:00至2026-11-11 23:59:59','2026/11/11 23:59','25','22','逾期','CNY',117376.74,97071.34,1.0000,97071.34,97071.34,'2026/11/13 00:47','DJPC20261110007'],
+  ['B20261112TYKD0016','TYKD','ACTYKD30','test080702121','ETARGET LIMITED','','华东区','王五','2026-11-07 00:00:00至2026-11-12 23:59:59','2026/11/12 23:59','40','38','逾期','HKD',5000,2500,0.9130,2282.50,2282.50,'2026/11/13 01:02','DJPC20261110008'],
+  ['B20261112G51870017','G5187','ACG518702','完美集团','US ELOGISTICS SERVICE CORP','','美洲销售组','张三','2026-11-07 00:00:00至2026-11-12 23:59:59','2026/11/12 23:59','62','60','已抵减','USD',500,500,7.1311,3565.55,0,'2026/11/13 01:15','DJPC20261111001'],
+  ['B20261112T23070018','T2307','ACT230701','Yuna\'scompany12','深圳易可达科技有限公司','','测试专用产品业务勿用','李四','2026-11-07 00:00:00至2026-11-12 23:59:59','2026/11/12 23:59','2','1','逾期','CNY',329.96,329.96,1.0000,329.96,329.96,'2026/11/13 01:23','DJPC20261111002'],
+  ['B20261105G14530019','G1453','ACG145302','ababababab','深圳易可达科技有限公司','1','默认销售区域','王五','2026-10-31 00:00:00至2026-11-05 23:59:59','2026/11/5 23:59','8','6','逾期','CNY',36451.51,36451.51,1.0000,36451.51,18225.76,'2026/11/12 21:58','DJPC20261109009'],
+  ['B20261105G29610020','G2961','ACG296103','SIGJH','深圳易可达科技有限公司','','测试专用产品业务勿用','张三','2026-10-31 00:00:00至2026-11-05 23:59:59','2026/11/5 23:59','15','12','逾期','CNY',22306.85,22306.85,1.0000,22306.85,22306.85,'2026/11/12 22:03','DJPC20261109010'],
+  ['B20261106G12620021','G1262','ACG126204','esignt','深圳易可达科技有限公司','','测试专用产品业务勿用','李四','2026-11-01 00:00:00至2026-11-06 23:59:59','2026/11/6 23:59','10','8','已抵减','CNY',38333.50,38333.50,1.0000,38333.50,0,'2026/11/12 22:17','DJPC20261109011'],
+  ['B20261106EL26360022','EL2636','ACEL263601','B2OF','深圳易可达科技有限公司','','测试专用产品业务勿用','王五','2026-11-01 00:00:00至2026-11-06 23:59:59','2026/11/6 23:59','5','3','逾期','CNY',137230.71,137230.71,1.0000,137230.71,137230.71,'2026/11/12 22:31','DJPC20261109012'],
+  ['B20261107EL25530023','EL2553','ACEL255301','SPS','ETARGET LIMITED','','美洲销售组','张三','2026-11-02 00:00:00至2026-11-07 23:59:59','2026/11/7 23:59','75','71','逾期','EUR',500,100,6.1523,615.23,615.23,'2026/11/12 22:45','DJPC20261109013'],
+  ['B20261107EL1220024','EL122','ACEL12248','FSDFSF','ETARGET LIMITED','3','美洲销售组','李四','2026-11-02 00:00:00至2026-11-07 23:59:59','2026/11/7 23:59','120','118','逾期','GBP',1000,800,8.9542,7163.36,7163.36,'2026/11/12 23:02','DJPC20261109014'],
+  ['B20261108G13000025','G1300','ACG130001','纵腾网络','深圳易可达科技有限公司','1','默认销售区域','王五','2026-11-03 00:00:00至2026-11-08 23:59:59','2026/11/8 23:59','88','85','逾期','CNY',21060.56,21060.56,1.0000,21060.56,21060.56,'2026/11/12 23:18','DJPC20261109015'],
+  ['B20261108G12600026','G1260','ACG126003','abcABC','深圳易可达科技有限公司','','测试专用产品业务勿用','张三','2026-11-03 00:00:00至2026-11-08 23:59:59','2026/11/8 23:59','6','4','逾期','HKD',2500,1250,0.9130,1141.25,1141.25,'2026/11/12 23:40','DJPC20261109016'],
+  ['B20261109EL28160027','EL2816','ACEL281601','长乐项目验证','ETARGET LIMITED','','默认销售区域','李四','2026-11-04 00:00:00至2026-11-09 23:59:59','2026/11/9 23:59','9','7','已抵减','CNY',1079.16,1079.16,1.0000,1079.16,0,'2026/11/12 23:55','DJPC20261111003'],
+  ['B20261109EL28850028','EL2885','ACEL288501','company2815','22日発株式会社','','美洲销售组','王五','2026-11-04 00:00:00至2026-11-09 23:59:59','2026/11/9 23:59','12','10','逾期','JPY',50000,30000,0.0505,1515.00,1515.00,'2026/11/13 00:05','DJPC20261111004'],
+  ['B20261109G5620029','G562','ACG562109','ABC company','ELOGISTICS (GA) SERVICE CORP','','战略客户部','张三','2026-11-04 00:00:00至2026-11-09 23:59:59','2026/11/9 23:59','55','50','逾期','EUR',200,200,6.1523,1230.46,1230.46,'2026/11/13 00:12','DJPC20261111005'],
+  ['B20261110G50670030','G5067','ACG506702','US XIONGMAO INC','US ELOGISTICS SERVICE CORP','','华北区','李四','2026-11-05 00:00:00至2026-11-10 23:59:59','2026/11/10 23:59','365','360','逾期','MXN',8000,8000,0.4180,3344.00,3344.00,'2026/11/13 00:28','DJPC20261111006'],
+  ['B20261110G11490031','G1149','ACG114911','aaa','深圳易可达科技有限公司','1','默认销售区域','王五','2026-11-05 00:00:00至2026-11-10 23:59:59','2026/11/10 23:59','4','2','逾期','CNY',14570.38,14570.38,1.0000,14570.38,14570.38,'2026/11/13 00:35','DJPC20261111007'],
+  ['B20261111G11490032','G1149','ACG114901','test','深圳易可达科技有限公司','1','默认销售区域','张三','2026-11-06 00:00:00至2026-11-11 23:59:59','2026/11/11 23:59','20','18','逾期','CNY',5111.75,5111.75,1.0000,5111.75,2555.88,'2026/11/13 00:47','DJPC20261111008'],
+  ['B20261111G13450033','G1345','ACG134569','深圳市神舟电脑股份有限公司2','深圳易可达科技有限公司','1','测试专用产品业务勿用','李四','2026-11-06 00:00:00至2026-11-11 23:59:59','2026/11/11 23:59','7','5','已抵减','CNY',606.81,606.81,1.0000,606.81,0,'2026/11/13 01:02','DJPC20261112001'],
+  ['B20261111G13450034','G1345','ACG134559','GD日本 -广州市洁骅企业策划有限公司','22日発株式会社','1','测试专用产品业务勿用','王五','2026-11-06 00:00:00至2026-11-11 23:59:59','2026/11/11 23:59','16','14','逾期','JPY',200000,200000,0.0505,10100.00,10100.00,'2026/11/13 01:15','DJPC20261112002'],
+  ['B20261112G50170035','G5017','ACG501702','CHANGLE.INC','深圳易可达科技有限公司','','广佛区','张三','2026-11-07 00:00:00至2026-11-12 23:59:59','2026/11/12 23:59','33','30','逾期','CNY',94318.06,94318.06,1.0000,94318.06,94318.06,'2026/11/13 01:23','DJPC20261112003'],
+  ['B20261112G50170036','G5017','ACG501709','R560JP.INC','22日発株式会社','','广佛区','李四','2026-11-07 00:00:00至2026-11-12 23:59:59','2026/11/12 23:59','1','1','逾期','JPY',25000,25000,0.0505,1262.50,1262.50,'2026/11/13 01:31','DJPC20261112004'],
+  ['B20261112G15290037','G1529','ACG1529867','Yuna-1111111','深圳易可达科技有限公司','1','美洲销售组','王五','2026-11-07 00:00:00至2026-11-12 23:59:59','2026/11/12 23:59','28','25','逾期','CNY',35844.31,35844.31,1.0000,35844.31,35844.31,'2026/11/13 01:38','DJPC20261112005'],
+  ['B20261104G15290038','G1529','ACG15291703','Autotest2917414','深圳易可达科技有限公司','1','美洲销售组','张三','2026-10-30 00:00:00至2026-11-04 23:59:59','2026/11/4 23:59','9','6','逾期','CNY',3692.78,3692.78,1.0000,3692.78,3692.78,'2026/11/12 21:55','DJPC20261109017'],
+  ['B20261104G5620039','G562','ACG56281','福州市长乐区建设发展集团有限公司','深圳易可达科技有限公司','','战略客户部','王五','2026-10-30 00:00:00至2026-11-04 23:59:59','2026/11/4 23:59','14','12','已抵减','USD',75,75,7.1311,534.83,0,'2026/11/12 21:58','DJPC20261109018'],
+  ['B20261105G15290040','G1529','ACG15291705','esigntest纵腾网络测试13','深圳易可达科技有限公司','1','美洲销售组','张三','2026-10-31 00:00:00至2026-11-05 23:59:59','2026/11/5 23:59','2','2','逾期','CNY',27761.57,27761.57,1.0000,27761.57,27761.57,'2026/11/12 22:03','DJPC20261109019'],
+  ['B20261105G50170041','G5017','ACG501705','USTEST.INC','US ELOGISTICS SERVICE CORP','','广佛区','李四','2026-10-31 00:00:00至2026-11-05 23:59:59','2026/11/5 23:59','47','44','逾期','HKD',8000,8000,0.9130,7304.00,7304.00,'2026/11/12 22:31','DJPC20261109020'],
+  ['B20261106G15290042','G1529','ACG152901','真实影像','深圳易可达科技有限公司','1','美洲销售组','王五','2026-11-01 00:00:00至2026-11-06 23:59:59','2026/11/6 23:59','180','175','逾期','CNY',315803.39,315803.39,1.0000,315803.39,315803.39,'2026/11/12 22:45','DJPC20261109021'],
+  ['B20261106G13420043','G1342','ACG134214','adf','深圳易可达科技有限公司','1','英国销售组','张三','2026-11-01 00:00:00至2026-11-06 23:59:59','2026/11/6 23:59','245','240','逾期','EUR',1000,1000,6.1523,6152.30,6152.30,'2026/11/12 23:02','DJPC20261109022'],
+  ['B20261107TYKD0044','TYKD','ACTYKD27','三只松鼠股份有限公司','深圳市前海云途物流有限公司上海分公司','','华东区','李四','2026-11-02 00:00:00至2026-11-07 23:59:59','2026/11/7 23:59','11','9','逾期','CNY',4136.75,4136.75,1.0000,4136.75,4136.75,'2026/11/12 23:18','DJPC20261109023'],
+  ['B20261107G15290045','G1529','ACG15291712','y:a li，n Eli；g.n,lo、lo。(kjhf);','US ELOGISTICS SERVICE CORP','1','美洲销售组','王五','2026-11-02 00:00:00至2026-11-07 23:59:59','2026/11/7 23:59','6','5','逾期','EUR',45.8,45.8,6.1523,281.78,281.78,'2026/11/12 23:40','DJPC20261109024'],
+  ['B20261108G5620046','G562','ACG562107','英国本土国家','Super Smart Service ltd','','战略客户部','张三','2026-11-03 00:00:00至2026-11-08 23:59:59','2026/11/8 23:59','150','148','逾期','USD',1500,1500,7.1311,10696.65,10696.65,'2026/11/12 23:55','DJPC20261109025'],
+  ['B20261108EL1220047','EL122','ACEL12239','Maxine-test-uat1','深圳易可达科技有限公司','3','美洲销售组','李四','2026-11-03 00:00:00至2026-11-08 23:59:59','2026/11/8 23:59','365','362','逾期','CNY',364790.41,364790.41,1.0000,364790.41,364790.41,'2026/11/13 00:05','DJPC20261111009'],
+  ['B20261109G17670048','G1767','ACG176701','深圳依时货拉拉','深圳易可达科技有限公司','1','默认销售区域','宋江','2026-11-04 00:00:00至2026-11-09 23:59:59','2026/11/9 23:59','13','11','逾期','HKD',1000,1000,0.9130,913.00,913.00,'2026/11/13 00:12','DJPC20261111010'],
+  ['B20261110TYKD0049','TYKD','ACTYKD30','test080702121','ETARGET LIMITED','','华东区','宋江','2026-11-05 00:00:00至2026-11-10 23:59:59','2026/11/10 23:59','52','48','已抵减','MXN',5000,5000,0.4180,2090.00,0,'2026/11/13 00:28','DJPC20261111011'],
+  ['B20261111G50670050','G5067','ACG506703','UK HAHAHA  LIMITED','Super Smart Service ltd','','华北区','宋江','2026-11-06 00:00:00至2026-11-11 23:59:59','2026/11/11 23:59','30','28','逾期','GBP',150,150,8.9542,1343.13,1343.13,'2026/11/13 00:35','DJPC20261111012']
+];
+
+function offsetCell(col, row) {
+  var v = row[col.i];
+  /* 抵减金额(CNY) = 逾期金额(CNY) - 抵减后金额(CNY)，随数据自动计算 */
+  if (col.k === 'offsetAmt') return fmtNum(Number(row[17]) - Number(row[18]));
+  if (col.num) return fmtNum(v, col.dec);
+  return fmtText(v);
+}
+
+/* 抵减明细筛选逻辑 */
+function offsetFilters() {
+  var res = OFFSET_ROWS.slice();
+  [['oBillNo', 0], ['oCustCode', 1], ['oAcctCode', 2], ['oSalesRep', 7], ['oBatchNo', 20]].forEach(function (pair) {
+    var kw = gv(pair[0]);
+    if (kw) {
+      var keys = kw.split(/[;；]/).map(function (s) { return s.trim().toUpperCase(); }).filter(Boolean);
+      res = res.filter(function (r) {
+        return keys.some(function (k) { return String(r[pair[1]]).toUpperCase().indexOf(k) > -1; });
+      });
+    }
+  });
+  [['oStar', 5], ['oArea', 6], ['oCur', 13]].forEach(function (pair) {
+    var v = gv(pair[0]);
+    if (v) res = res.filter(function (r) { return String(r[pair[1]]).indexOf(v) > -1; });
+  });
+  return res;
+}
+
+/* 合计金额弹窗数据：按币种自动汇总（原币逾期金额 / CNY 逾期金额） */
+var OFFSET_SUM = (function () {
+  var map = {};
+  OFFSET_ROWS.forEach(function (r) {
+    var c = r[13];
+    if (!map[c]) map[c] = [0, 0];
+    map[c][0] += Number(r[15]);
+    map[c][1] += Number(r[17]);
+  });
+  return Object.keys(map).map(function (k) { return [map[k][0], k, map[k][1]]; });
+})();
+
+/* ======================================================
+   视图三数据：逾期账单抵减过程（四类单据，多币种）
+   PROC_POS：[账单号, 逾期天数, 账单币种, 逾期金额原币(>0), 当月记账汇率]
+   PROC_NEG：[账单号, 逾期天数, 账单币种, 逾期金额原币(<0), 当月记账汇率]
+   PROC_RECHARGE：[充值单号, 充值币种, 未核销金额原币, 当月记账汇率]
+   PROC_GRACE：[宽限单号, 宽限金额(CNY)]
+   数据设计覆盖全部规则分支：
+   - P001~P003 逾期天数>180，仅宽限单可抵减（规则4）
+   - N004 需跨两张正数账单才能抵完（规则2"抵不完继续往天数小的账单"）
+   - N003 会把 P004 抵至耗尽并跨到 P005
+   - R003 为负数充值单，演示"不抵减"（规则3例外）
+   - R002 抵减过程中耗尽一张正数账单后继续抵下一张
+   - P008~P012 保持未抵减，演示"无可抵来源/条件不满足"
+   ====================================================== */
+var PROC_POS = [
+  ['B2026P001', 400, 'CNY', 1000.00, 1.0000],
+  ['B2026P002', 320, 'USD', 200.00, 7.1311],
+  ['B2026P003', 210, 'EUR', 100.00, 6.1523],
+  ['B2026P004', 150, 'CNY', 5000.00, 1.0000],
+  ['B2026P005', 120, 'USD', 300.00, 7.1311],
+  ['B2026P006', 95,  'CNY', 800.00, 1.0000],
+  ['B2026P007', 75,  'JPY', 50000.00, 0.0505],
+  ['B2026P008', 60,  'EUR', 250.00, 6.1523],
+  ['B2026P009', 45,  'CNY', 6000.00, 1.0000],
+  ['B2026P010', 30,  'HKD', 4000.00, 0.9130],
+  ['B2026P011', 15,  'CNY', 2000.00, 1.0000],
+  ['B2026P012', 5,   'USD', 100.00, 7.1311]
+];
+var PROC_NEG = [
+  ['B2026N001', 200, 'CNY', -800.00, 1.0000],
+  ['B2026N002', 90,  'EUR', -50.00, 6.1523],
+  ['B2026N003', 40,  'CNY', -3000.00, 1.0000],
+  ['B2026N004', 10,  'USD', -150.00, 7.1311]
+];
+var PROC_RECHARGE = [
+  ['R20260001', 'CNY', 1500.00, 1.0000],
+  ['R20260002', 'USD', 100.00, 7.1311],
+  ['R20260003', 'CNY', -200.00, 1.0000],
+  ['R20260004', 'JPY', 20000.00, 0.0505]
+];
+var PROC_GRACE = [
+  ['G20260001', 1000.00],
+  ['G20260002', 500.00]
+];
+
+/* ======================================================
+   抵减引擎（纯函数，无 DOM 依赖，页面与 Excel 生成脚本共用）
+   规则：
+   1. 所有逾期账单按逾期天数从大到小排列，CNY金额 = 逾期金额原币×记账汇率（四舍五入2位后参与抵减）
+   2. 负数账单逐个（天数降序）抵减「逾期天数≤180」的正数账单（天数大到小），记录双方被抵减金额；
+      抵不完继续往天数更小的正数账单，直到该负数账单抵完
+   3. 充值单（未核销金额换算CNY>0）按规则2同顺序抵减；金额为负数则不抵减
+   4. 宽限单（CNY金额）从逾期天数最大的正数账单开始往下抵减（不限180天），直到宽限金额抵完
+   ====================================================== */
+function runOffsetEngine(pos, neg, recharge, grace) {
+  /* 四舍五入到分（按绝对值方向舍入，加 epsilon 消除浮点误差，如 307.615→307.62） */
+  function round2(v) {
+    var s = v < 0 ? -1 : 1;
+    return s * Math.round(Math.abs(v) * 100 + 1e-6) / 100;
+  }
+  var EPS = 0.005; /* 分级精度，避免浮点残留 */
+
+  /* ---- 步骤1：CNY 换算 + 正数账单按逾期天数降序 ---- */
+  var positives = pos.map(function (b) {
+    var cny = round2(b[3] * b[4]);
+    return { type: '正数账单', no: b[0], days: b[1], cur: b[2], amtO: b[3], rate: b[4],
+             cny: cny, offset: 0, remain: cny, status: '未抵减' };
+  }).sort(function (a, b) { return b.days - a.days; });
+
+  var negatives = neg.map(function (b) {
+    var cny = round2(b[3] * b[4]);
+    return { type: '负数账单', no: b[0], days: b[1], cur: b[2], amtO: b[3], rate: b[4],
+             cny: cny, offset: 0, remain: cny, status: '未抵减' };
+  }).sort(function (a, b) { return b.days - a.days; });
+
+  var recharges = recharge.map(function (r) {
+    var cny = round2(r[2] * r[3]);
+    return { type: '充值单', no: r[0], days: null, cur: r[1], amtO: r[2], rate: r[3],
+             cny: cny, offset: 0, remain: cny, status: cny < 0 ? '不抵减' : '未抵减' };
+  });
+
+  var graces = grace.map(function (g) {
+    return { type: '宽限单', no: g[0], days: null, cur: 'CNY', amtO: g[1], rate: null,
+             cny: g[1], offset: 0, remain: g[1], status: '未抵减' };
+  });
+
+  var events = [];
+  var stepNo = 0;
+
+  /* 将来源单据 src 的待抵减额度，按 targets 顺序逐张抵减，生成事件并同步更新双方 */
+  function offsetFromTargets(src, srcType, targets) {
+    var need = round2(Math.abs(src.remain));
+    for (var i = 0; i < targets.length && need > EPS; i++) {
+      var t = targets[i];
+      if (t.remain <= EPS) continue; /* 该账单已抵完 */
+      var amt = round2(Math.min(need, t.remain));
+      t.remain = round2(t.remain - amt);
+      t.offset = round2(t.offset + amt);
+      need = round2(need - amt);
+      src.offset = round2(src.offset + amt);
+      stepNo++;
+      events.push({
+        step: stepNo, type: srcType, srcNo: src.no, targetNo: t.no, amt: amt,
+        srcRemain: need, targetRemain: t.remain
+      });
+    }
+    /* 负数账单保持负数口径，充值/宽限保持正数口径 */
+    src.remain = round2(src.remain < 0 ? -need : need);
+  }
+
+  /* 规则2/3 的可抵正数账单：逾期天数≤180，且按天数大到小（positives 已排序） */
+  var eligible = positives.filter(function (p) { return p.days <= 180; });
+
+  /* ---- 步骤2：负数账单逐个抵减（天数降序） ---- */
+  negatives.forEach(function (n) {
+    if (n.cny >= 0) return; /* 防御：仅处理负数账单 */
+    offsetFromTargets(n, '负数账单', eligible);
+  });
+
+  /* ---- 步骤3：充值单抵减（正数抵减，负数不抵减） ---- */
+  recharges.forEach(function (r) {
+    if (r.cny <= 0) return;
+    offsetFromTargets(r, '充值单', eligible);
+  });
+
+  /* ---- 步骤4：宽限单抵减（从逾期天数最大正数账单开始，不限180天） ---- */
+  graces.forEach(function (g) {
+    offsetFromTargets(g, '宽限单', positives);
+  });
+
+  /* ---- 状态汇总 ---- */
+  function settle(d) {
+    if (d.status === '不抵减') return;
+    var leftover = Math.abs(d.remain);
+    if (d.offset > EPS && leftover > EPS) d.status = '部分抵减';
+    else if (d.offset > EPS) d.status = '已抵完';
+    else d.status = '未抵减';
+  }
+  positives.forEach(settle);
+  negatives.forEach(settle);
+  recharges.forEach(settle);
+  graces.forEach(settle);
+
+  return {
+    documents: positives.concat(negatives, recharges, graces),
+    events: events
+  };
+}
+
+/* 页面加载时执行一次，结果缓存供两表与弹窗共用 */
+var PROC_RESULT = runOffsetEngine(PROC_POS, PROC_NEG, PROC_RECHARGE, PROC_GRACE);
+
+/* ===== 视图三：单据列表（列定义 / 单元格 / 筛选 / 合计） ===== */
+var PROC_COLS = [
+  { k:'docType',   label:'单据类型',         w:110 },
+  { k:'docNo',     label:'单据编号',         w:170 },
+  { k:'days',      label:'逾期天数',         w:100 },
+  { k:'cur',       label:'币种',             w:90 },
+  { k:'amtO',      label:'金额(原币)',       num:true, w:130 },
+  { k:'rate',      label:'记账汇率',         num:true, dec:4, w:110 },
+  { k:'cny',       label:'金额(CNY)',        num:true, w:130 },
+  { k:'offsetAmt', label:'被抵减金额(CNY)',  num:true, w:150 },
+  { k:'remain',    label:'抵减后余额(CNY)',  num:true, w:150 },
+  { k:'status',    label:'抵减状态',         w:110 }
+];
+var PROC_DEFAULT = ['docType','docNo','days','cur','amtO','rate','cny','offsetAmt','remain','status'];
+
+function procCell(col, d) {
+  if (col.k === 'docType') {
+    var tc = d.type === '正数账单' ? 'blue' : d.type === '负数账单' ? 'warning'
+           : d.type === '充值单' ? 'success' : 'violet';
+    return tag(d.type, tc);
+  }
+  if (col.k === 'status') {
+    var sc = d.status === '已抵完' ? 'success' : d.status === '部分抵减' ? 'warning'
+           : d.status === '不抵减' ? 'danger' : 'info';
+    return tag(d.status, sc);
+  }
+  if (col.k === 'offsetAmt') return fmtNum(d.offset);
+  if (col.k === 'days' || col.k === 'rate') {
+    if (d[col.k] === null || d[col.k] === undefined) return '<span class="zero">--</span>';
+    return col.k === 'rate' ? fmtNum(d.rate, 4) : fmtText(d.days);
+  }
+  if (col.num) return fmtNum(d[col.k]);
+  return fmtText(d[col.k]);
+}
+
+/* 单据列表筛选：类型/状态 seg + 单据编号 + 币种 + 逾期天数区间 */
+function procDocFilters() {
+  var res = PROC_RESULT.documents.slice();
+  var typeBtn = document.querySelector('#procTypeSeg .seg-btn.active');
+  var type = typeBtn ? typeBtn.textContent.trim() : '全部';
+  if (type !== '全部') res = res.filter(function (d) { return d.type === type; });
+  var stBtn = document.querySelector('#procStatusSeg .seg-btn.active');
+  var st = stBtn ? stBtn.textContent.trim() : '全部';
+  if (st !== '全部') res = res.filter(function (d) { return d.status === st; });
+  var no = gv('pDocNo');
+  if (no) res = res.filter(function (d) { return d.no.toUpperCase().indexOf(no.toUpperCase()) > -1; });
+  var c = gv('pDocCur');
+  if (c) res = res.filter(function (d) { return d.cur === c; });
+  var dMin = Number(gv('pDocDayMin')), dMax = Number(gv('pDocDayMax'));
+  if (gv('pDocDayMin') !== '') res = res.filter(function (d) { return d.days !== null && d.days >= dMin; });
+  if (gv('pDocDayMax') !== '') res = res.filter(function (d) { return d.days !== null && d.days <= dMax; });
+  return res;
+}
+
+/* ===== 视图三：抵减过程记录（列定义 / 单元格 / 筛选） ===== */
+var PROC_EVENT_COLS = [
+  { k:'step',       label:'步骤',               w:80 },
+  { k:'evType',     label:'抵减类型',           w:110 },
+  { k:'srcNo',      label:'来源单据编号',       w:170 },
+  { k:'targetNo',   label:'目标账单编号',       w:170 },
+  { k:'amt',        label:'本次抵减金额(CNY)',  num:true, w:160 },
+  { k:'srcRemain',  label:'来源剩余(CNY)',      num:true, w:140 },
+  { k:'targetRemain', label:'账单剩余(CNY)',    num:true, w:140 }
+];
+var PROC_EVENT_DEFAULT = ['step','evType','srcNo','targetNo','amt','srcRemain','targetRemain'];
+
+function procEventCell(col, e) {
+  if (col.k === 'evType') {
+    var tc = e.type === '负数账单' ? 'warning' : e.type === '充值单' ? 'success' : 'violet';
+    return tag(e.type, tc);
+  }
+  if (col.num) return fmtNum(e[col.k]);
+  return fmtText(e[col.k]);
+}
+
+/* 流水表筛选：抵减类型 + 来源单据 + 目标账单 */
+function procEventFilters() {
+  var res = PROC_RESULT.events.slice();
+  var t = gv('pEvType');
+  if (t) res = res.filter(function (e) { return e.type === t; });
+  var s = gv('pEvSrc');
+  if (s) res = res.filter(function (e) { return e.srcNo.toUpperCase().indexOf(s.toUpperCase()) > -1; });
+  var g = gv('pEvTarget');
+  if (g) res = res.filter(function (e) { return e.targetNo.toUpperCase().indexOf(g.toUpperCase()) > -1; });
+  return res;
+}
+
+/* 合计弹窗数据：按单据类型汇总被抵减金额（CNY 口径） */
+var PROC_SUM = ['正数账单', '负数账单', '充值单', '宽限单'].map(function (t) {
+  var off = 0;
+  PROC_RESULT.documents.forEach(function (d) { if (d.type === t) off += d.offset; });
+  return [t, Math.round(off * 100) / 100];
+});
+
+/* ===== 页内标签切换：单据列表 / 抵减过程记录 ===== */
+function switchProcTab(key) {
+  var isDocs = key === 'docs';
+  document.getElementById('procDocsBlock').style.display = isDocs ? '' : 'none';
+  document.getElementById('procEventsBlock').style.display = isDocs ? 'none' : '';
+  document.getElementById('procTabDocs').classList.toggle('active', isDocs);
+  document.getElementById('procTabEvents').classList.toggle('active', !isDocs);
+  cur = isDocs ? PAGES.process : PAGES.processEvents;
+}
+
+/* ===== 抵减明细联动弹窗：展示某单据参与的全部抵减流水 ===== */
+var procDialog = document.getElementById('procDialog');
+
+function openProcDetail(no) {
+  var evs = PROC_RESULT.events.filter(function (e) { return e.srcNo === no || e.targetNo === no; });
+  var doc = null;
+  PROC_RESULT.documents.forEach(function (d) { if (d.no === no) doc = d; });
+  document.getElementById('procDialogTitle').textContent = '抵减明细 - ' + no + (doc ? '（' + doc.type + '）' : '');
+  var body;
+  if (evs.length) {
+    body = evs.map(function (e, i) {
+      return '<tr>'
+        + '<td>' + (i + 1) + '</td>'
+        + '<td>' + tag(e.type, e.type === '负数账单' ? 'warning' : e.type === '充值单' ? 'success' : 'violet') + '</td>'
+        + '<td>' + e.srcNo + '</td>'
+        + '<td>' + e.targetNo + '</td>'
+        + '<td class="num">' + fmtNum(e.amt) + '</td>'
+        + '<td class="num">' + fmtNum(e.srcRemain) + '</td>'
+        + '<td class="num">' + fmtNum(e.targetRemain) + '</td>'
+        + '</tr>';
+    }).join('');
+    var total = Math.round(evs.reduce(function (s, e) { return s + e.amt; }, 0) * 100) / 100;
+    document.getElementById('procDialogTotal').textContent = total.toLocaleString('zh-CN', { minimumFractionDigits: 2 });
+  } else {
+    body = '<tr><td colspan="7" style="text-align:center;padding:36px 0;color:#909399;">该单据未参与抵减</td></tr>';
+    document.getElementById('procDialogTotal').textContent = '--';
+  }
+  document.getElementById('procDialogBody').innerHTML = body;
+  procDialog.classList.add('open');
+}
+
+function closeProcDialog() { procDialog.classList.remove('open'); }
+
+procDialog.addEventListener('click', function (e) {
+  if (e.target === this) closeProcDialog();
+});
+
+/* ======================================================
+   页面实例与视图切换
+   ====================================================== */
+var PAGES = {
+  aging: createPage({
+    key: 'aging',
+    COLS: AGING_COLS,
+    DEFAULT_VISIBLE: AGING_DEFAULT,
+    rows: AGING_ROWS,
+    el: { head: 'aHead', body: 'aBody', pgTotal: 'aPgTotal', pgPages: 'aPgPages', pgPrev: 'aPgPrev', pgNext: 'aPgNext', pgJump: 'aPgJump' },
+    cellHtml: agingCell,
+    sumTitle: '逾期合计金额',
+    sumData: AGING_SUM,
+    applyFilters: function () { this.filtered = agingFilters(); }
+  }),
+  offset: createPage({
+    key: 'offset',
+    COLS: OFFSET_COLS,
+    DEFAULT_VISIBLE: OFFSET_DEFAULT,
+    rows: OFFSET_ROWS,
+    el: { head: 'oHead', body: 'oBody', pgTotal: 'oPgTotal', pgPages: 'oPgPages', pgPrev: 'oPgPrev', pgNext: 'oPgNext', pgJump: 'oPgJump' },
+    cellHtml: offsetCell,
+    sumTitle: '合计金额',
+    sumData: OFFSET_SUM,
+    applyFilters: function () { this.filtered = offsetFilters(); }
+  }),
+  process: createPage({
+    key: 'process',
+    COLS: PROC_COLS,
+    DEFAULT_VISIBLE: PROC_DEFAULT,
+    rows: PROC_RESULT.documents,
+    el: { head: 'pDocHead', body: 'pDocBody', pgTotal: 'pDocPgTotal', pgPages: 'pDocPgPages', pgPrev: 'pDocPgPrev', pgNext: 'pDocPgNext', pgJump: 'pDocPgJump' },
+    cellHtml: procCell,
+    sumTitle: '抵减金额合计（按单据类型）',
+    sumData: PROC_SUM,
+    opHtml: function (d) { return '<a class="op-link" onclick="openProcDetail(\'' + d.no + '\')">抵减明细</a>'; },
+    applyFilters: function () { this.filtered = procDocFilters(); }
+  }),
+  processEvents: createPage({
+    key: 'process',
+    COLS: PROC_EVENT_COLS,
+    DEFAULT_VISIBLE: PROC_EVENT_DEFAULT,
+    rows: PROC_RESULT.events,
+    el: { head: 'pEvHead', body: 'pEvBody', pgTotal: 'pEvPgTotal', pgPages: 'pEvPgPages', pgPrev: 'pEvPgPrev', pgNext: 'pEvPgNext', pgJump: 'pEvPgJump' },
+    cellHtml: procEventCell,
+    sumTitle: '抵减金额合计（按单据类型）',
+    sumData: PROC_SUM,
+    opHtml: function (e) {
+      return '<a class="op-link" onclick="openProcDetail(\'' + e.srcNo + '\')">来源明细</a>'
+        + '<a class="op-link" onclick="openProcDetail(\'' + e.targetNo + '\')">目标明细</a>';
+    },
+    applyFilters: function () { this.filtered = procEventFilters(); }
+  })
+};
+
+var VIEW_NAMES = { aging: '客户逾期账龄表', offset: '逾期账单抵减明细', process: '逾期账单抵减过程' };
+var cur = PAGES.aging;
+
+function switchView(key) {
+  document.querySelectorAll('.view').forEach(function (v) { v.classList.remove('active'); });
+  var view = document.getElementById('view-' + key);
+  if (view) view.classList.add('active');
+  document.querySelectorAll('.sider-menu .menu-item').forEach(function (m) {
+    m.classList.toggle('active', m.getAttribute('data-view') === key);
+  });
+  document.getElementById('crumbCur').textContent = VIEW_NAMES[key] || key;
+  cur = PAGES[key] || null;
+}
+
+/* ===== 字段选择弹出层（作用于当前视图页面） ===== */
+var colPop = document.getElementById('colPop');
+
+function openColPop(ev) {
+  ev.stopPropagation();
+  if (!cur) return;
+  if (colPop.classList.contains('open')) { closeColPop(); return; }
+  renderColPop();
+  var rect = ev.target.getBoundingClientRect();
+  var w = 250;
+  var left = Math.min(rect.right - w, window.innerWidth - w - 8);
+  var top = rect.bottom + 6;
+  if (top + 360 > window.innerHeight) top = Math.max(8, rect.top - 360);
+  colPop.style.left = Math.max(8, left) + 'px';
+  colPop.style.top = top + 'px';
+  colPop.classList.add('open');
+}
+
+function closeColPop() { colPop.classList.remove('open'); }
+
+function renderColPop() {
+  var list = cur.COLS.map(function (c) {
+    var checked = cur.visibleKeys.indexOf(c.k) > -1 ? ' checked' : '';
+    return '<label class="cp-item" onclick="event.stopPropagation()">'
+      + '<input type="checkbox" class="el-checkbox" data-k="' + c.k + '"' + checked + ' onchange="colToggle(\'' + c.k + '\', this)">'
+      + '<span>' + c.label + '</span></label>';
+  }).join('');
+  document.getElementById('cpList').innerHTML = list;
+  document.getElementById('cpCount').textContent = cur.visibleKeys.length + '/' + cur.COLS.length;
+}
+
+function colToggle(k, cb) {
+  var idx = cur.visibleKeys.indexOf(k);
+  if (cb.checked && idx === -1) cur.visibleKeys.push(k);
+  if (!cb.checked && idx > -1) cur.visibleKeys.splice(idx, 1);
+  document.getElementById('cpCount').textContent = cur.visibleKeys.length + '/' + cur.COLS.length;
+  cur.render();
+}
+
+function colSelAll() {
+  cur.visibleKeys = cur.COLS.map(function (c) { return c.k; });
+  renderColPop();
+  cur.render();
+}
+
+function colReset() {
+  cur.visibleKeys = cur.DEFAULT_VISIBLE.slice();
+  renderColPop();
+  cur.render();
+}
+
+/* 点击空白处关闭弹出层 */
+document.addEventListener('click', function (e) {
+  if (colPop.classList.contains('open') && !colPop.contains(e.target)) closeColPop();
+});
+
+/* ===== 合计金额弹窗（作用于当前视图页面） ===== */
+function fmt4(v) {
+  var s = Math.abs(v).toLocaleString('zh-CN', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+  return v < 0 ? '-' + s : s;
+}
+var sumDialog = document.getElementById('sumDialog');
+
+function openSumDialog() {
+  if (!cur) return;
+  document.getElementById('sumDialogTitle').textContent = cur.sumTitle;
+  /* 类型汇总模式：行 = [类型名, 金额]；默认模式：行 = [原币金额, 币种, CNY金额] */
+  var isTypeMode = cur.sumData.length && typeof cur.sumData[0][0] === 'string';
+  var ths = document.querySelectorAll('#sumDialog thead th');
+  ths[1].textContent = isTypeMode ? '单据类型' : '金额';
+  ths[1].className = isTypeMode ? '' : 'num';
+  ths[2].textContent = isTypeMode ? '被抵减金额' : '本位币金额';
+  var body = cur.sumData.map(function (r, i) {
+    if (isTypeMode) {
+      return '<tr>'
+        + '<td>' + (i + 1) + '</td>'
+        + '<td>' + r[0] + '</td>'
+        + '<td class="num">' + fmt4(r[1]) + ' CNY</td>'
+        + '</tr>';
+    }
+    return '<tr>'
+      + '<td>' + (i + 1) + '</td>'
+      + '<td class="num">' + fmt4(r[0]) + ' ' + r[1] + '</td>'
+      + '<td class="num">' + fmt4(r[2]) + ' CNY</td>'
+      + '</tr>';
+  }).join('');
+  document.getElementById('sumDialogBody').innerHTML = body;
+
+  var total = isTypeMode
+    ? cur.sumData.reduce(function (s, r) { return s + r[1]; }, 0)
+    : cur.sumData.reduce(function (s, r) { return s + r[2]; }, 0);
+  document.getElementById('sumDialogTotal').textContent = fmt4(total) + ' CNY';
+
+  sumDialog.classList.add('open');
+}
+
+function closeSumDialog() { sumDialog.classList.remove('open'); }
+
+sumDialog.addEventListener('click', function (e) {
+  if (e.target === this) closeSumDialog();
+});
+
+/* ===== 初始化 ===== */
+PAGES.aging.render();
+PAGES.offset.render();
+PAGES.process.render();
+PAGES.processEvents.render();
+</script>
+</body>
+</html>
