@@ -1557,9 +1557,16 @@ PROC_RESULT.events.forEach(function (e) {
     procBatchMap[e.targetNo] = 'DJPC20261116' + ('000000' + procBatchSeq).slice(-6);
   }
   e.batchNo = procBatchMap[e.targetNo];
-  var src = null;
-  PROC_RESULT.documents.forEach(function (d) { if (d.no === e.srcNo) src = d; });
+  var src = null, tgt = null;
+  PROC_RESULT.documents.forEach(function (d) {
+    if (d.no === e.srcNo) src = d;
+    if (d.no === e.targetNo) tgt = d;
+  });
   e.updateTime = src ? src.updateTime : '';
+  /* 客户信息字段取被抵减单据（默认不展示，齿轮面板可勾选） */
+  ['custCode', 'acctCode', 'signSubj', 'servSubj', 'custStar', 'salesArea', 'salesRep'].forEach(function (k) {
+    e[k] = tgt ? tgt[k] : '';
+  });
 });
 
 /* 视图四专用列：单据列表 10 列 + 客户信息 7 列（PAGES.offsetnew 使用，须定义于 PAGES 之前） */
@@ -1615,12 +1622,20 @@ var PROC_EVENT_COLS = [
   { k:'evType',     label:'抵减类型',           w:110 },
   { k:'srcNo',      label:'抵减单据编号',      w:170 },
   { k:'targetNo',   label:'被抵减单据编号',    w:170 },
+  { k:'custCode',   label:'客户代码',          w:100 },
+  { k:'acctCode',   label:'账户编码',          w:110 },
+  { k:'signSubj',   label:'签约主体',          w:120 },
+  { k:'servSubj',   label:'服务主体',          w:220 },
+  { k:'custStar',   label:'客户星级',          w:90 },
+  { k:'salesArea',  label:'销售区域',          w:130 },
+  { k:'salesRep',   label:'销售代表',          w:100 },
   { k:'amt',        label:'本次抵减金额(CNY)',  num:true, w:160 },
   { k:'srcRemain',  label:'抵减单据剩余(CNY)',  num:true, w:150 },
   { k:'targetRemain', label:'被抵减单据剩余(CNY)', num:true, w:160 },
   { k:'batchNo',    label:'批次',               w:150 },
   { k:'updateTime', label:'更新时间',           w:140 }
 ];
+/* 客户信息字段（取被抵减单据）默认不展示，可通过齿轮字段面板勾选 */
 var PROC_EVENT_DEFAULT = ['step','evType','srcNo','targetNo','amt','srcRemain','targetRemain','batchNo','updateTime'];
 
 function procEventCell(col, e) {
