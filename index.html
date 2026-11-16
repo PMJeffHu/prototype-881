@@ -464,9 +464,9 @@
           <i class="mi-icon">📊</i><span class="mi-text">客户逾期账龄表</span>
         </div>
       </li>
-      <li class="menu-item" data-view="offsetnew" title="逾期账单抵减明细NEW">
+      <li class="menu-item" data-view="offsetnew" title="逾期账单抵减明细">
         <div class="mi-row" onclick="switchView('offsetnew')">
-          <i class="mi-icon">📄</i><span class="mi-text">逾期账单抵减明细NEW</span>
+          <i class="mi-icon">📄</i><span class="mi-text">逾期账单抵减明细</span>
         </div>
       </li>
       <li class="menu-item" data-view="process" title="逾期账单抵减过程">
@@ -800,7 +800,7 @@
       </div>
 
       <!-- ================================================== -->
-      <!-- 视图四：逾期账单抵减明细NEW（单据列表，数据同抵减过程-单据列表） -->
+      <!-- 视图四：逾期账单抵减明细（单据列表，数据同抵减过程-单据列表） -->
       <!-- ================================================== -->
       <div class="view" id="view-offsetnew">
 
@@ -2222,7 +2222,7 @@ function onDocFilters() {
   return res;
 }
 
-var VIEW_NAMES = { aging: '客户逾期账龄表', offsetnew: '逾期账单抵减明细NEW', process: '逾期账单抵减过程' };
+var VIEW_NAMES = { aging: '客户逾期账龄表', offsetnew: '逾期账单抵减明细', process: '逾期账单抵减过程' };
 var cur = PAGES.aging;
 
 function switchView(key) {
