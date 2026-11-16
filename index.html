@@ -309,7 +309,31 @@
     background: #fff; color: var(--text-regular); font-size: 12px; outline: none;
   }
   .wf-input:focus { border-color: var(--primary); }
-  .wf-multi { height: auto; padding: 3px 6px; line-height: 1.5; }
+  .wf-multi { position: relative; }
+  .wf-multi-val {
+    height: 26px; padding: 0 24px 0 8px; position: relative;
+    border: 1px solid var(--border); border-radius: 3px;
+    background: #fff; color: var(--text-regular); font-size: 12px;
+    line-height: 24px; cursor: pointer; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap;
+  }
+  .wf-multi-val::after {
+    content: '▾'; position: absolute; right: 8px; top: 0;
+    color: var(--text-secondary); pointer-events: none;
+  }
+  .wf-multi-pop {
+    display: none; position: absolute; left: 0; right: 0; top: 28px; z-index: 50;
+    background: #fff; border: 1px solid var(--border); border-radius: 3px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.12); padding: 4px 0;
+    max-height: 200px; overflow-y: auto;
+  }
+  .wf-multi.open .wf-multi-pop { display: block; }
+  .wf-multi-item {
+    display: flex; align-items: center; gap: 6px;
+    padding: 5px 10px; font-size: 12px; color: var(--text-regular); cursor: pointer;
+  }
+  .wf-multi-item:hover { background: #F5F7FA; }
+  .wf-multi-item .el-checkbox { margin: 0; }
   .wf-static { color: var(--text-regular); line-height: 26px; }
   .wf-textarea {
     width: 100%; min-height: 52px; padding: 6px 8px;
@@ -1011,17 +1035,18 @@
               <div class="wf-fi"><label>出账周期（天）:</label><div class="wf-static">30</div></div>
               <div class="wf-fi">
                 <label>申请类型:</label>
-                <div class="wf-ctl">
-                  <select class="wf-input wf-multi" multiple size="4">
-                    <option>计费争议未解决</option>
-                    <option>计费争议已解决待回款</option>
-                    <option>赔返流程未完结</option>
-                    <option>未按时回款</option>
-                    <option>资金紧张</option>
-                    <option>付款异常</option>
-                    <option>约定结算账期与系统不一致</option>
-                    <option>其他</option>
-                  </select>
+                <div class="wf-ctl wf-multi" id="applyTypeSel">
+                  <div class="wf-multi-val" onclick="wfMultiToggle(event)" data-placeholder="请选择申请类型">请选择申请类型</div>
+                  <div class="wf-multi-pop" onclick="event.stopPropagation()">
+                    <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange()">计费争议未解决</label>
+                    <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange()">计费争议已解决待回款</label>
+                    <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange()">赔返流程未完结</label>
+                    <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange()">未按时回款</label>
+                    <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange()">资金紧张</label>
+                    <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange()">付款异常</label>
+                    <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange()">约定结算账期与系统不一致</label>
+                    <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange()">其他</label>
+                  </div>
                 </div>
               </div>
               <div class="wf-fi">
@@ -2839,9 +2864,30 @@ function colReset() {
   cur.render();
 }
 
+/* ===== OA 表单：申请类型下拉复选 ===== */
+function wfMultiToggle(ev) {
+  ev.stopPropagation();
+  var box = ev.currentTarget.parentElement;
+  var wasOpen = box.classList.contains('open');
+  document.querySelectorAll('.wf-multi.open').forEach(function (b) { b.classList.remove('open'); });
+  if (!wasOpen) box.classList.add('open');
+}
+function wfMultiChange() {
+  var box = document.getElementById('applyTypeSel');
+  var val = box.querySelector('.wf-multi-val');
+  var picked = Array.prototype.slice.call(box.querySelectorAll('.wf-multi-item input'))
+    .filter(function (cb) { return cb.checked; })
+    .map(function (cb) { return cb.parentElement.textContent.trim(); });
+  val.textContent = picked.length ? picked.join('、') : (val.getAttribute('data-placeholder') || '请选择');
+  val.title = val.textContent;
+}
+
 /* 点击空白处关闭弹出层 */
 document.addEventListener('click', function (e) {
   if (colPop.classList.contains('open') && !colPop.contains(e.target)) closeColPop();
+  document.querySelectorAll('.wf-multi.open').forEach(function (b) {
+    if (!b.contains(e.target)) b.classList.remove('open');
+  });
 });
 
 /* ===== 合计金额弹窗（作用于当前视图页面） ===== */
