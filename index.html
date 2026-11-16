@@ -974,6 +974,42 @@
   </div>
 </div>
 
+<!-- ===== 账龄区间抵减明细弹窗（账龄表区间值点击联动，样式同上） ===== -->
+<div class="sum-dialog-mask" id="ageDialog">
+  <div class="sum-dialog" style="width:820px;">
+    <div class="sd-header">
+      <span class="sd-title" id="ageDialogTitle">账龄区间抵减明细</span>
+      <button class="sd-close" onclick="closeAgeDialog()">✕</button>
+    </div>
+    <div class="sd-body">
+      <table class="sd-table">
+        <thead>
+          <tr>
+            <th style="width:64px;">序号</th>
+            <th style="width:110px;">抵减类型</th>
+            <th>抵减单据</th>
+            <th>被抵减单据</th>
+            <th class="num">本次抵减金额(CNY)</th>
+            <th class="num">抵减单据剩余(CNY)</th>
+            <th class="num">被抵减单据剩余(CNY)</th>
+          </tr>
+        </thead>
+        <tbody id="ageDialogBody"></tbody>
+        <tfoot>
+          <tr class="sd-sum">
+            <td colspan="4">被抵减金额合计</td>
+            <td class="num" id="ageDialogTotal">--</td>
+            <td colspan="2"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <div class="sd-footer">
+      <button class="btn btn-primary" onclick="closeAgeDialog()">返 回</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ===== 侧边栏折叠 ===== */
 var sider = document.getElementById('sider');
@@ -1246,12 +1282,22 @@ var AGING_ROWS = [
   ['ACG126003','审核通过','未停用','abcABC','深圳易可达科技有限公司','','海外仓储|','额度管控','39','测试专用产品业务勿用','张三','李四','王五','G1260','G1260','','非正式客户','0',644.14,0,'CNY',0,0,'','',659079.31,0,659079.31,0,0,0,0,0,659079.31,0,'成功','',T1,'系统','同步成功',T1,'']
 ];
 
+/* 账龄区间字段：点击非零值弹出该客户该区间的抵减明细 */
+var AGE_RANGE_LABELS = { d30:'逾期1-30天', d60:'逾期31-60天', d90:'逾期61-90天',
+  d180:'逾期91-180天', d360:'逾期181-360天', ov360:'逾期360天以上' };
+var AGE_RANGE_DAYS = { d30:[1,30], d60:[31,60], d90:[61,90],
+  d180:[91,180], d360:[181,360], ov360:[361,Infinity] };
+
 function agingCell(col, row) {
   var v = row[col.i];
   switch (col.k) {
     case 'status':      return v === '成功' ? tag('成功','success') : v === '失败' ? tag('失败','danger') : fmtText(v);
     case 'auditStatus': return v === '审核通过' ? tag('审核通过','success') : v === '停用' ? tag('停用','danger') : fmtText(v);
     case 'syncStatus':  return v === '同步成功' ? tag('同步成功','success') : v === '同步失败' ? tag('同步失败','danger') : fmtText(v);
+  }
+  if (AGE_RANGE_LABELS[col.k] && Number(v) !== 0) {
+    return '<a class="op-link" title="查看抵减明细" onclick="openAgeDetail(\'' + row[13] + '\',\'' + col.k + '\')">'
+      + fmtNum(v) + '</a>';
   }
   if (col.num) return fmtNum(v);
   return fmtText(v);
@@ -1682,6 +1728,53 @@ function closeProcDialog() { procDialog.classList.remove('open'); }
 
 procDialog.addEventListener('click', function (e) {
   if (e.target === this) closeProcDialog();
+});
+
+/* ===== 账龄区间抵减明细弹窗：按客户代码 + 逾期天数区间过滤被抵减的正/负数账单流水 ===== */
+var ageDialog = document.getElementById('ageDialog');
+
+function openAgeDetail(custCode, key) {
+  var range = AGE_RANGE_DAYS[key] || [0, -1];
+  var label = AGE_RANGE_LABELS[key] || key;
+  var nums = {};
+  PROC_RESULT.documents.forEach(function (d) {
+    if ((d.type === '正数账单' || d.type === '负数账单')
+      && d.offset > 0.005 && d.days !== null
+      && d.days >= range[0] && d.days <= range[1]
+      && String(d.custCode || '').toUpperCase() === String(custCode || '').toUpperCase()) {
+      nums[d.no] = true;
+    }
+  });
+  var evs = PROC_RESULT.events.filter(function (e) { return nums[e.srcNo] || nums[e.targetNo]; });
+  document.getElementById('ageDialogTitle').textContent = '账龄区间抵减明细 - ' + custCode + ' - ' + label;
+  var body;
+  if (evs.length) {
+    body = evs.map(function (e, i) {
+      var tc = e.type === '负数账单抵减' ? 'warning' : e.type === '充值单抵减' ? 'success' : 'violet';
+      return '<tr>'
+        + '<td>' + (i + 1) + '</td>'
+        + '<td>' + tag(e.type, tc) + '</td>'
+        + '<td>' + e.srcNo + '</td>'
+        + '<td>' + e.targetNo + '</td>'
+        + '<td class="num">' + fmtNum(e.amt) + '</td>'
+        + '<td class="num">' + fmtNum(e.srcRemain) + '</td>'
+        + '<td class="num">' + fmtNum(e.targetRemain) + '</td>'
+        + '</tr>';
+    }).join('');
+    var total = Math.round(evs.reduce(function (s, e) { return s + e.amt; }, 0) * 100) / 100;
+    document.getElementById('ageDialogTotal').textContent = total.toLocaleString('zh-CN', { minimumFractionDigits: 2 });
+  } else {
+    body = '<tr><td colspan="7" style="text-align:center;padding:36px 0;color:#909399;">该客户在该账龄区间暂无抵减明细</td></tr>';
+    document.getElementById('ageDialogTotal').textContent = '--';
+  }
+  document.getElementById('ageDialogBody').innerHTML = body;
+  ageDialog.classList.add('open');
+}
+
+function closeAgeDialog() { ageDialog.classList.remove('open'); }
+
+ageDialog.addEventListener('click', function (e) {
+  if (e.target === this) closeAgeDialog();
 });
 
 /* ======================================================
