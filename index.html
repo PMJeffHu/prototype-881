@@ -1856,6 +1856,60 @@ function runOffsetEngine(pos, neg, recharge, grace) {
 /* 页面加载时执行一次，结果缓存供两表与弹窗共用 */
 var PROC_RESULT = runOffsetEngine(PROC_POS, PROC_NEG, PROC_RECHARGE, PROC_GRACE);
 
+/* 视图四（抵减明细NEW）客户信息：单据号 → [客户代码,账户编码,签约主体,服务主体,客户星级,销售区域,销售代表] */
+var PROC_CUST_INFO = {
+  'B2026P001': ['G562','ACG562118','Grupo Bimbo','CIRRO FULFILLMENT MEXICO','','战略客户部','宋江'],
+  'B2026P002': ['G1529','ACG15291721','HOKIE','ETARGET LIMITED','1','美洲销售组','张三'],
+  'B2026P003': ['EL2842','ACEL284201','Maixne','US ELOGISTICS SERVICE CORP','','美洲销售组','李四'],
+  'B2026P004': ['G3087','ACG308702','123456','深圳易可达科技有限公司','','测试专用产品业务勿用','王五'],
+  'B2026P005': ['G5067','ACG506703','UK HAHAHA  LIMITED','Super Smart Service ltd','','华北区','张三'],
+  'B2026P006': ['G5088','ACG508805','美国测试公司','US ELOGISTICS SERVICE CORP','','华北区','李四'],
+  'B2026P007': ['G5017','ACG501710','R560CA002.INC','ZENDA LOGISTICS CORP.','','广佛区','王五'],
+  'B2026P008': ['TYY','ACTYY01','LAUFUN','深圳易可达科技有限公司','','默认销售区域','张三'],
+  'B2026P009': ['G1299','ACG129903','海飞丝','深圳易可达科技有限公司','1','默认销售区域','李四'],
+  'B2026P010': ['G1342','ACG134217','应该','深圳易可达科技有限公司','1','默认销售区域','王五'],
+  'B2026P011': ['G1767','ACG176701','深圳依时货拉拉','深圳易可达科技有限公司','1','默认销售区域','张三'],
+  'B2026P012': ['G1573','ACG157301','深圳市爱奇迹','ELOGISTICS (GA) SERVICE CORP','1','默认销售区域','李四'],
+  'B2026N001': ['G1345','ACG134560','GD法国-徐州妙仕洁商贸有限公司','JS LOGISTICS','1','测试专用产品业务勿用','王五'],
+  'B2026N002': ['G1650','ACG165001','深圳市符音科','ETARGET LIMITED','1','品牌客户组','张三'],
+  'B2026N003': ['G1149','ACG114910','江西省韩记生鲜配送有限公司宋家坊店','深圳易可达科技有限公司','1','默认销售区域','李四'],
+  'B2026N004': ['TYKD','ACTYKD30','test080702121','ETARGET LIMITED','','华东区','王五'],
+  'R20260001': ['G5187','ACG518702','完美集团','US ELOGISTICS SERVICE CORP','','美洲销售组','张三'],
+  'R20260002': ['T2307','ACT230701','Yuna\'scompany12','深圳易可达科技有限公司','','测试专用产品业务勿用','李四'],
+  'R20260003': ['G1453','ACG145302','ababababab','深圳易可达科技有限公司','1','默认销售区域','王五'],
+  'R20260004': ['G2961','ACG296103','SIGJH','深圳易可达科技有限公司','','测试专用产品业务勿用','张三'],
+  'G20260001': ['G1262','ACG126204','esignt','深圳易可达科技有限公司','','测试专用产品业务勿用','李四'],
+  'G20260002': ['EL2636','ACEL263601','B2OF','深圳易可达科技有限公司','','测试专用产品业务勿用','王五']
+};
+PROC_RESULT.documents.forEach(function (d) {
+  var c = PROC_CUST_INFO[d.no] || ['', '', '', '', '', '', ''];
+  d.custCode = c[0]; d.acctCode = c[1]; d.signSubj = c[2]; d.servSubj = c[3];
+  d.custStar = c[4]; d.salesArea = c[5]; d.salesRep = c[6];
+});
+
+/* 视图四专用列：单据列表 10 列 + 客户信息 7 列（PAGES.offsetnew 使用，须定义于 PAGES 之前） */
+var ON_COLS = [
+  { k:'docType',   label:'单据类型',         w:110 },
+  { k:'docNo',     label:'单据编号',         w:170 },
+  { k:'custCode',  label:'客户代码',         w:100 },
+  { k:'acctCode',  label:'账户编码',         w:110 },
+  { k:'signSubj',  label:'签约主体',         w:120 },
+  { k:'servSubj',  label:'服务主体',         w:220 },
+  { k:'custStar',  label:'客户星级',         w:90 },
+  { k:'salesArea', label:'销售区域',         w:130 },
+  { k:'salesRep',  label:'销售代表',         w:100 },
+  { k:'days',      label:'逾期天数',         w:100 },
+  { k:'cur',       label:'币种',             w:90 },
+  { k:'amtO',      label:'金额(原币)',       num:true, w:130 },
+  { k:'rate',      label:'记账汇率',         num:true, dec:4, w:110 },
+  { k:'cny',       label:'金额(CNY)',        num:true, w:130 },
+  { k:'offsetAmt', label:'被抵减金额(CNY)',  num:true, w:150 },
+  { k:'remain',    label:'抵减后余额(CNY)',  num:true, w:150 },
+  { k:'status',    label:'抵减状态',         w:110 }
+];
+var ON_DEFAULT = ['docType','docNo','custCode','acctCode','signSubj','servSubj','custStar','salesArea','salesRep',
+  'days','cur','amtO','rate','cny','offsetAmt','remain','status'];
+
 /* ===== 视图三：单据列表（列定义 / 单元格 / 筛选 / 合计） ===== */
 var PROC_COLS = [
   { k:'docType',   label:'单据类型',         w:110 },
@@ -1883,6 +1937,7 @@ function procCell(col, d) {
     return tag(d.status, sc);
   }
   if (col.k === 'offsetAmt') return fmtNum(d.offset);
+  if (col.k === 'docNo') return fmtText(d.no);
   if (col.k === 'days' || col.k === 'rate') {
     if (d[col.k] === null || d[col.k] === undefined) return '<span class="zero">--</span>';
     return col.k === 'rate' ? fmtNum(d.rate, 4) : fmtText(d.days);
@@ -2052,8 +2107,8 @@ var PAGES = {
   }),
   offsetnew: createPage({
     key: 'offsetnew',
-    COLS: PROC_COLS,
-    DEFAULT_VISIBLE: PROC_DEFAULT,
+    COLS: ON_COLS,
+    DEFAULT_VISIBLE: ON_DEFAULT,
     rows: PROC_RESULT.documents,
     el: { head: 'onHead', body: 'onBody', pgTotal: 'onPgTotal', pgPages: 'onPgPages', pgPrev: 'onPgPrev', pgNext: 'onPgNext', pgJump: 'onPgJump' },
     cellHtml: procCell,
