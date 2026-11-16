@@ -131,7 +131,7 @@ var evRows = events.map(function (e) {
   return [e.step, e.type, e.srcNo, e.targetNo, e.amt, e.srcRemain, e.targetRemain];
 });
 buildSheet(wb, '抵减过程明细', [
-  { h: '步骤', w: 8, center: true }, { h: '抵减类型', w: 12, center: true },
+  { h: '抵减顺序', w: 8, center: true }, { h: '抵减类型', w: 12, center: true },
   { h: '抵减单据编号', w: 18 }, { h: '被抵减单据编号', w: 18 },
   { h: '本次抵减金额(CNY)', w: 18, fmt: MONEY }, { h: '抵减单据剩余(CNY)', w: 16, fmt: MONEY },
   { h: '被抵减单据剩余(CNY)', w: 16, fmt: MONEY }
