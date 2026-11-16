@@ -718,7 +718,7 @@
               <div class="fi">
                 <label>抵减类型:</label>
                 <div class="fi-controls">
-                  <select class="el-select" id="pEvType"><option value="">请选择抵减类型</option><option>负数账单</option><option>充值单</option><option>宽限单</option></select>
+                  <select class="el-select" id="pEvType"><option value="">请选择抵减类型</option><option>负数账单抵减</option><option>充值单抵减</option><option>宽限金额抵减</option></select>
                 </div>
               </div>
 
@@ -1479,18 +1479,18 @@ function runOffsetEngine(pos, neg, recharge, grace) {
   /* ---- 步骤2：负数账单逐个抵减（天数降序） ---- */
   negatives.forEach(function (n) {
     if (n.cny >= 0) return; /* 防御：仅处理负数账单 */
-    offsetFromTargets(n, '负数账单', eligible);
+    offsetFromTargets(n, '负数账单抵减', eligible);
   });
 
   /* ---- 步骤3：充值单抵减（正数抵减，负数不抵减） ---- */
   recharges.forEach(function (r) {
     if (r.cny <= 0) return;
-    offsetFromTargets(r, '充值单', eligible);
+    offsetFromTargets(r, '充值单抵减', eligible);
   });
 
   /* ---- 步骤4：宽限单抵减（从逾期天数最大正数账单开始，不限180天） ---- */
   graces.forEach(function (g) {
-    offsetFromTargets(g, '宽限单', positives);
+    offsetFromTargets(g, '宽限金额抵减', positives);
   });
 
   /* ---- 状态汇总 ---- */
@@ -1640,7 +1640,7 @@ var PROC_EVENT_DEFAULT = ['step','evType','srcNo','targetNo','amt','srcRemain','
 
 function procEventCell(col, e) {
   if (col.k === 'evType') {
-    var tc = e.type === '负数账单' ? 'warning' : e.type === '充值单' ? 'success' : 'violet';
+    var tc = e.type === '负数账单抵减' ? 'warning' : e.type === '充值单抵减' ? 'success' : 'violet';
     return tag(e.type, tc);
   }
   if (col.num) return fmtNum(e[col.k]);
@@ -1679,7 +1679,7 @@ function openProcDetail(no) {
     body = evs.map(function (e, i) {
       return '<tr>'
         + '<td>' + (i + 1) + '</td>'
-        + '<td>' + tag(e.type, e.type === '负数账单' ? 'warning' : e.type === '充值单' ? 'success' : 'violet') + '</td>'
+        + '<td>' + tag(e.type, e.type === '负数账单抵减' ? 'warning' : e.type === '充值单抵减' ? 'success' : 'violet') + '</td>'
         + '<td>' + e.srcNo + '</td>'
         + '<td>' + e.targetNo + '</td>'
         + '<td class="num">' + fmtNum(e.amt) + '</td>'
