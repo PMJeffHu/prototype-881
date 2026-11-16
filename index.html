@@ -1549,10 +1549,11 @@ OFFSET_ROWS.forEach(function (row, i) {
 
 function offsetCell(col, row) {
   var v = row[col.i];
-  /* 三个抵减来源分量，和恒等于 逾期金额(CNY) - 抵减后金额(CNY) */
+  /* 三个抵减来源分量，和恒等于 逾期金额(CNY) - 抵减后金额(CNY)；负数账单抵减展示为带符号负数 */
   if (col.k === 'negOffset' || col.k === 'fundOffset' || col.k === 'graceOffset') {
     var sp = OFFSET_SPLIT.get(row) || [0, 0, 0];
-    return fmtNum(col.k === 'negOffset' ? sp[0] : col.k === 'fundOffset' ? sp[1] : sp[2]);
+    if (col.k === 'negOffset') return fmtNum(sp[0] ? -sp[0] : 0);
+    return fmtNum(col.k === 'fundOffset' ? sp[1] : sp[2]);
   }
   if (col.num) return fmtNum(v, col.dec);
   return fmtText(v);
