@@ -1747,10 +1747,11 @@ var ageDialog = document.getElementById('ageDialog');
 function openAgeDetail(custCode, key) {
   var range = AGE_RANGE_DAYS[key] || [0, -1];
   var label = AGE_RANGE_LABELS[key] || key;
+  /* 区间内全部正/负数账单（含未抵减账单），默认展示其抵减后金额 */
   var nums = {};
   PROC_RESULT.documents.forEach(function (d) {
     if ((d.type === '正数账单' || d.type === '负数账单')
-      && d.offset > 0.005 && d.days !== null
+      && d.days !== null
       && d.days >= range[0] && d.days <= range[1]
       && String(d.custCode || '').toUpperCase() === String(custCode || '').toUpperCase()) {
       nums[d.no] = true;
@@ -1760,35 +1761,57 @@ function openAgeDetail(custCode, key) {
   document.getElementById('ageDialogTitle').textContent = '账龄区间抵减明细 - ' + custCode + ' - ' + label;
   var docMap = {};
   PROC_RESULT.documents.forEach(function (d) { docMap[d.no] = d; });
-  var body, cnyTotal = 0, remainTotal = 0;
-  if (evs.length) {
-    body = evs.map(function (e) {
-      /* 账单信息取该区间被抵减的正/负数账单：优先目标账单，其次来源账单 */
-      var bill = docMap[e.targetNo] && nums[e.targetNo] ? docMap[e.targetNo]
-        : docMap[e.srcNo] && nums[e.srcNo] ? docMap[e.srcNo] : null;
-      if (!bill) return '';
-      var tc = e.type === '负数账单抵减' ? 'warning' : e.type === '充值单抵减' ? 'success' : 'violet';
-      cnyTotal += bill.cny;
-      remainTotal += e.targetRemain;
-      return '<tr>'
-        + '<td>' + bill.no + '</td>'
-        + '<td>' + bill.billCycle + '</td>'
-        + '<td>' + bill.days + '</td>'
-        + '<td class="num">' + fmtNum(bill.amtO) + '</td>'
-        + '<td class="num">' + (bill.rate === null ? '--' : fmtNum(bill.rate, 4)) + '</td>'
-        + '<td class="num">' + fmtNum(bill.cny) + '</td>'
-        + '<td>' + tag(e.type, tc) + '</td>'
-        + '<td>' + e.srcNo + '</td>'
-        + '<td>' + e.targetNo + '</td>'
-        + '<td class="num">' + fmtNum(e.amt) + '</td>'
-        + '<td class="num">' + fmtNum(e.srcRemain) + '</td>'
-        + '<td class="num">' + fmtNum(e.targetRemain) + '</td>'
-        + '</tr>';
-    }).join('');
+  var rows = [], matched = {}, cnyTotal = 0, remainTotal = 0;
+  evs.forEach(function (e) {
+    /* 账单信息取该区间账单：优先被抵减的目标账单，其次来源账单 */
+    var bill = docMap[e.targetNo] && nums[e.targetNo] ? docMap[e.targetNo]
+      : docMap[e.srcNo] && nums[e.srcNo] ? docMap[e.srcNo] : null;
+    if (!bill) return;
+    matched[bill.no] = true;
+    var tc = e.type === '负数账单抵减' ? 'warning' : e.type === '充值单抵减' ? 'success' : 'violet';
+    cnyTotal += bill.cny;
+    remainTotal += e.targetRemain;
+    rows.push('<tr>'
+      + '<td>' + bill.no + '</td>'
+      + '<td>' + bill.billCycle + '</td>'
+      + '<td>' + bill.days + '</td>'
+      + '<td class="num">' + fmtNum(bill.amtO) + '</td>'
+      + '<td class="num">' + (bill.rate === null ? '--' : fmtNum(bill.rate, 4)) + '</td>'
+      + '<td class="num">' + fmtNum(bill.cny) + '</td>'
+      + '<td>' + tag(e.type, tc) + '</td>'
+      + '<td>' + e.srcNo + '</td>'
+      + '<td>' + e.targetNo + '</td>'
+      + '<td class="num">' + fmtNum(e.amt) + '</td>'
+      + '<td class="num">' + fmtNum(e.srcRemain) + '</td>'
+      + '<td class="num">' + fmtNum(e.targetRemain) + '</td>'
+      + '</tr>');
+  });
+  /* 未被抵减的账单：逾期金额(CNY) = 被抵减单据剩余(CNY)，抵减流水部分按 0 / -- 处理 */
+  Object.keys(nums).forEach(function (no) {
+    if (matched[no]) return;
+    var bill = docMap[no];
+    cnyTotal += bill.cny;
+    remainTotal += bill.remain;
+    rows.push('<tr>'
+      + '<td>' + bill.no + '</td>'
+      + '<td>' + bill.billCycle + '</td>'
+      + '<td>' + bill.days + '</td>'
+      + '<td class="num">' + fmtNum(bill.amtO) + '</td>'
+      + '<td class="num">' + (bill.rate === null ? '--' : fmtNum(bill.rate, 4)) + '</td>'
+      + '<td class="num">' + fmtNum(bill.cny) + '</td>'
+      + '<td>--</td><td>--</td><td>--</td>'
+      + '<td class="num">' + fmtNum(0) + '</td>'
+      + '<td class="num">' + fmtNum(0) + '</td>'
+      + '<td class="num">' + fmtNum(bill.remain) + '</td>'
+      + '</tr>');
+  });
+  var body;
+  if (rows.length) {
+    body = rows.join('');
     document.getElementById('ageCnyTotal').textContent = (Math.round(cnyTotal * 100) / 100).toLocaleString('zh-CN', { minimumFractionDigits: 2 });
     document.getElementById('ageTargetRemainTotal').textContent = (Math.round(remainTotal * 100) / 100).toLocaleString('zh-CN', { minimumFractionDigits: 2 });
   } else {
-    body = '<tr><td colspan="12" style="text-align:center;padding:36px 0;color:#909399;">该客户在该账龄区间暂无抵减明细</td></tr>';
+    body = '<tr><td colspan="12" style="text-align:center;padding:36px 0;color:#909399;">该客户在该账龄区间暂无账单抵减明细</td></tr>';
     document.getElementById('ageCnyTotal').textContent = '--';
     document.getElementById('ageTargetRemainTotal').textContent = '--';
   }
