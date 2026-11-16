@@ -284,6 +284,57 @@
   .gpa-table thead th { background: #F5F7FA; color: var(--text-main); text-align: center; font-weight: 600; }
   .gpa-table tbody tr:last-child td { border-bottom: 1px solid var(--border-light); }
 
+  /* ===== OA 申请表单（逾期白名单 / 宽限期） ===== */
+  .wf-page { padding: 0 0 12px; }
+  .wf-sec {
+    display: flex; align-items: center; gap: 6px;
+    margin: 16px 0 10px; padding-left: 8px;
+    border-left: 3px solid var(--primary);
+    color: var(--text-main); font-weight: 600; font-size: 13px;
+  }
+  .wf-note {
+    padding: 7px 10px; margin-bottom: 8px;
+    background: #ECF5FF; border: 1px solid #D9ECFF; border-radius: 3px;
+    color: #409EFF; font-size: 12px; line-height: 1.5;
+  }
+  .wf-fields { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px 20px; }
+  .wf-fields.cols3 { grid-template-columns: repeat(3, 1fr); }
+  .wf-fi { display: flex; align-items: flex-start; gap: 6px; font-size: 12px; }
+  .wf-fi > label { flex: 0 0 auto; color: var(--text-regular); line-height: 26px; }
+  .wf-fi > label .req { color: #F56C6C; margin-right: 2px; }
+  .wf-fi .wf-ctl { flex: 1; min-width: 0; }
+  .wf-input {
+    width: 100%; height: 26px; padding: 0 8px;
+    border: 1px solid var(--border); border-radius: 3px;
+    background: #fff; color: var(--text-regular); font-size: 12px; outline: none;
+  }
+  .wf-input:focus { border-color: var(--primary); }
+  .wf-static { color: var(--text-regular); line-height: 26px; }
+  .wf-textarea {
+    width: 100%; min-height: 52px; padding: 6px 8px;
+    border: 1px solid var(--border); border-radius: 3px;
+    color: var(--text-regular); font-size: 12px; outline: none; resize: vertical;
+  }
+  .wf-textarea:focus { border-color: var(--primary); }
+  .wf-count { display: block; text-align: right; color: #C0C4CC; font-size: 11px; }
+  .wf-upload { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--text-secondary); }
+  .wf-upload .wf-up-btn {
+    width: 26px; height: 26px; line-height: 24px; text-align: center;
+    border: 1px solid var(--border); border-radius: 3px; color: var(--primary); cursor: pointer;
+  }
+  .wf-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .wf-table th, .wf-table td {
+    border: 1px solid var(--border-light); padding: 7px 8px;
+    color: var(--text-regular); white-space: nowrap; text-align: center;
+  }
+  .wf-table thead th { background: #E9EBF8; color: var(--text-main); font-weight: 600; }
+  .wf-table tr.sum td { background: #F5F7FA; }
+  .wf-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .wf-table .wf-add { color: var(--primary); cursor: pointer; font-size: 13px; }
+  .wf-total { display: flex; gap: 40px; margin-top: 14px; font-size: 12px; color: var(--text-regular); }
+  .wf-total b { color: var(--text-main); font-weight: 400; }
+  .wf-foot { display: flex; justify-content: center; gap: 12px; padding: 14px 0 4px; }
+
   /* 复选框 */
   .el-checkbox {
     width: 14px; height: 14px;
@@ -507,6 +558,16 @@
       <li class="menu-item" data-view="process" title="逾期账单抵减过程">
         <div class="mi-row" onclick="switchView('process')">
           <i class="mi-icon">🔁</i><span class="mi-text">逾期账单抵减过程</span>
+        </div>
+      </li>
+      <li class="menu-item" data-view="whiteApply" title="逾期白名单申请">
+        <div class="mi-row" onclick="switchView('whiteApply')">
+          <i class="mi-icon">📋</i><span class="mi-text">逾期白名单申请</span>
+        </div>
+      </li>
+      <li class="menu-item" data-view="graceApply" title="宽限期申请">
+        <div class="mi-row" onclick="switchView('graceApply')">
+          <i class="mi-icon">🗓️</i><span class="mi-text">宽限期申请</span>
         </div>
       </li>
       <li class="menu-item" data-view="grace" title="宽限期申请OA表单">
@@ -839,6 +900,166 @@
                   <button class="btn" style="height:26px;padding:0 10px;" onclick="cur.goPage()">GO</button>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 视图：逾期白名单申请（OA 表单，静态 HTML） ===== -->
+      <div class="view" id="view-whiteApply">
+        <div class="card">
+          <div class="card-body wf-page">
+            <div class="wf-sec">基础信息</div>
+            <div class="wf-fields cols3">
+              <div class="wf-fi"><label>客户代码:</label><div class="wf-ctl"><input class="wf-input" value="G5099"></div></div>
+              <div class="wf-fi"><label>销售代表:</label><div class="wf-static">胡俊峰</div></div>
+              <div class="wf-fi"><label>应收未到期(CNY):</label><div class="wf-static">0.00 W</div></div>
+              <div class="wf-fi"><label>最近成交时间:</label><div class="wf-static">2021-05-07 21:27:50</div></div>
+            </div>
+            <div class="wf-fi" style="margin-top:14px;">
+              <label>本单原因:</label>
+              <div class="wf-ctl">
+                <textarea class="wf-textarea" placeholder="请输入申请原因"></textarea>
+                <span class="wf-count">0/225</span>
+              </div>
+            </div>
+
+            <div class="wf-sec">应收明细</div>
+            <div style="margin-bottom:8px;">
+              <button class="btn" style="height:26px;padding:0 10px;" onclick="alert('原型演示：批量删除')">批量删除</button>
+            </div>
+            <div class="table-wrap">
+              <table class="wf-table">
+                <thead>
+                  <tr>
+                    <th style="width:36px;"><input type="checkbox" class="el-checkbox"></th>
+                    <th style="width:48px;">序号</th>
+                    <th style="width:130px;">客户编号</th>
+                    <th>银行信息</th>
+                    <th>付款周期</th>
+                    <th>应收账款(CNY)</th>
+                    <th>未逾期合计(CNY)</th>
+                    <th>逾期合计(CNY)</th>
+                    <th>逾期1-30天金额(CNY)</th>
+                    <th>逾期31-60天金额(CNY)</th>
+                    <th>逾期61-90天金额(CNY)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><input type="checkbox" class="el-checkbox"></td>
+                    <td>1</td>
+                    <td><select class="wf-input"><option>ACG00993</option></select></td>
+                    <td>海外仓储</td>
+                    <td>0</td>
+                    <td class="num">0.00</td>
+                    <td class="num">--</td><td class="num">--</td>
+                    <td class="num">--</td><td class="num">--</td><td class="num">--</td>
+                  </tr>
+                  <tr class="sum">
+                    <td colspan="5">合计</td>
+                    <td class="num">0.00</td><td class="num">0.00</td><td class="num">0.00</td>
+                    <td class="num">0.00</td><td class="num">0.00</td><td class="num">0.00</td>
+                  </tr>
+                  <tr><td colspan="11" class="wf-add">＋</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="wf-sec">合计金额</div>
+            <div class="wf-total"><span>应收账款CNY: <b>0.00</b></span></div>
+
+            <div class="wf-foot">
+              <button class="btn btn-primary" onclick="alert('原型演示：确定')">确 定</button>
+              <button class="btn" onclick="alert('原型演示：取消')">取 消</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 视图：宽限期申请（OA 表单，静态 HTML） ===== -->
+      <div class="view" id="view-graceApply">
+        <div class="card">
+          <div class="card-body wf-page">
+            <div class="wf-sec">基础信息</div>
+            <div class="wf-fields">
+              <div class="wf-fi"><label><span class="req">*</span>客户代码:</label><div class="wf-ctl"><input class="wf-input" value="G3087"></div></div>
+              <div class="wf-fi"><label><span class="req">*</span>申请编号:</label><div class="wf-ctl"><input class="wf-input" value="ACG308702"></div></div>
+              <div class="wf-fi"><label><span class="req">*</span>宽限金额(CNY):</label><div class="wf-ctl"><input class="wf-input" placeholder="宽限金额按逾期金额所以做申请/冲抵"></div></div>
+              <div class="wf-fi"><label><span class="req">*</span>有效时间:</label><div class="wf-static">开始日期&nbsp; - &nbsp;结束日期</div></div>
+              <div class="wf-fi"><label>销售代表:</label><div class="wf-static">测试业务部业务组</div></div>
+              <div class="wf-fi"><label>销售部门:</label><div class="wf-static">测试专用产品业务勿用</div></div>
+              <div class="wf-fi"><label>客户体量CNY:</label><div class="wf-static">0.00 W</div></div>
+              <div class="wf-fi"><label>付款周期:</label><div class="wf-static">30</div></div>
+              <div class="wf-fi"><label>最近成交时间:</label><div class="wf-static">2022-11-18 14:49:30</div></div>
+              <div class="wf-fi"><label>签约业务:</label><div class="wf-static">海外仓储</div></div>
+            </div>
+            <div class="wf-fi" style="margin-top:14px;">
+              <label>附件:</label>
+              <div class="wf-ctl wf-upload">
+                <span class="wf-up-btn">☁</span>
+                <span>支持包括JPG、JPEG、PNG、BMP、ZIP、RAR、PDF、XLSX、DOCX格式，单个文件大小不超过10M，最多上传9个附件</span>
+              </div>
+            </div>
+            <div class="wf-fi" style="margin-top:12px;">
+              <label>申请原因:</label>
+              <div class="wf-ctl">
+                <textarea class="wf-textarea" placeholder="请输入申请原因"></textarea>
+                <span class="wf-count">0/225</span>
+              </div>
+            </div>
+
+            <div class="wf-sec">应收明细</div>
+            <div class="wf-note">点击此展示的逾期金额会算出该金额，记录上传月1号更新，特殊情况请财务在对应月更新，另行审核！重算账单策略</div>
+            <div class="table-wrap">
+              <table class="wf-table">
+                <thead>
+                  <tr>
+                    <th style="width:48px;">序号</th>
+                    <th>临时宽限金额</th>
+                    <th>剩余宽限金额</th>
+                    <th>到期时间</th>
+                    <th>应收账款(CNY)</th>
+                    <th>未逾期合计(CNY)</th>
+                    <th>逾期合计(CNY)</th>
+                    <th>逾期1-30天金额(CNY)</th>
+                    <th>逾期31-60天金额(CNY)</th>
+                    <th>逾期61-90天金额(CNY)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>1</td>
+                    <td class="num">0.00</td><td class="num">0.00</td>
+                    <td>-- 至 --</td>
+                    <td class="num">5,896,604.29</td>
+                    <td class="num">0.00</td>
+                    <td class="num">5,896,604.29</td>
+                    <td class="num">28,742.07</td>
+                    <td class="num">29,768.57</td>
+                    <td class="num">30,795.07</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="wf-sec">逾期反馈</div>
+            <div class="wf-fields">
+              <div class="wf-fi"><label>逾期类型:</label><div class="wf-static">--</div></div>
+              <div class="wf-fi"><label>客户合作状态:</label><div class="wf-static">--</div></div>
+              <div class="wf-fi"><label>逾期原因描述:</label><div class="wf-static">--</div></div>
+              <div class="wf-fi"><label>预计回款时间:</label><div class="wf-static">--</div></div>
+            </div>
+
+            <div class="wf-sec">合计金额</div>
+            <div class="wf-total">
+              <span>应收账款CNY: <b>5,896,604.29</b></span>
+              <span>逾期合计(CNY): <b>5,896,604.29</b></span>
+            </div>
+
+            <div class="wf-foot">
+              <button class="btn btn-primary" onclick="alert('原型演示：确定')">确 定</button>
+              <button class="btn" onclick="alert('原型演示：取消')">取 消</button>
             </div>
           </div>
         </div>
@@ -2498,7 +2719,7 @@ function onDocFilters() {
   return res;
 }
 
-var VIEW_NAMES = { aging: '客户逾期账龄表', offsetnew: '逾期账单抵减明细', process: '逾期账单抵减过程', grace: '宽限期申请OA表单', whitelist: '逾期白名单申请OA表单' };
+var VIEW_NAMES = { aging: '客户逾期账龄表', offsetnew: '逾期账单抵减明细', process: '逾期账单抵减过程', whiteApply: '逾期白名单申请', graceApply: '宽限期申请', grace: '宽限期申请OA表单', whitelist: '逾期白名单申请OA表单' };
 var cur = PAGES.aging;
 
 function switchView(key) {
