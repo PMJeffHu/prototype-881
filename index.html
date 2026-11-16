@@ -400,13 +400,14 @@
   .sd-table tbody tr { transition: background .15s; }
   .sd-table tbody tr:hover td { background: #F5F7FA; }
   .sd-table tr.sd-sum td { background: #F0F1F9; font-weight: 600; color: var(--text-main); }
-  #ageDialog .sd-table { border: 1px solid var(--border-light); }
-  #ageDialog .sd-table th,
-  #ageDialog .sd-table td {
+  #ageDialog .sd-table, #rcDialog .sd-table { border: 1px solid var(--border-light); }
+  #ageDialog .sd-table th, #ageDialog .sd-table td,
+  #rcDialog .sd-table th, #rcDialog .sd-table td {
     border: 1px solid var(--border-light);
     padding: 9px 12px;
   }
-  #ageDialog .sd-table tbody tr:last-child td { border-bottom: 1px solid var(--border-light); }
+  #ageDialog .sd-table tbody tr:last-child td,
+  #rcDialog .sd-table tbody tr:last-child td { border-bottom: 1px solid var(--border-light); }
   .sd-footer { display: flex; justify-content: center; padding: 14px 0 18px; }
 
   /* ===== 分页 ===== */
@@ -1038,6 +1039,58 @@
   </div>
 </div>
 
+<!-- ===== 待核销充值金额明细弹窗（账龄表待核销充值金额值点击联动） ===== -->
+<div class="sum-dialog-mask" id="rcDialog">
+  <div class="sum-dialog" style="width:1080px;">
+    <div class="sd-header">
+      <span class="sd-title" id="rcDialogTitle">待核销充值金额明细</span>
+      <button class="sd-close" onclick="closeRcDialog()">✕</button>
+    </div>
+    <div class="sd-body">
+      <div class="age-sec-label">充值单信息</div>
+      <table class="sd-table">
+        <thead>
+          <tr>
+            <th>资金流水号</th>
+            <th>资金单号</th>
+            <th class="num">待核销金额原币</th>
+            <th>原币单位</th>
+            <th class="num" style="width:90px;">记账汇率</th>
+            <th class="num">待核销金额(CNY)</th>
+          </tr>
+        </thead>
+        <tbody id="rcBillBody"></tbody>
+      </table>
+
+      <div class="age-sec-label">抵减信息</div>
+      <table class="sd-table">
+        <thead>
+          <tr>
+            <th style="width:130px;">抵减类型</th>
+            <th>抵减单据</th>
+            <th>被抵减单据</th>
+            <th class="num">本次抵减金额(CNY)</th>
+          </tr>
+        </thead>
+        <tbody id="rcOffsetBody"></tbody>
+      </table>
+
+      <div class="age-sec-label">抵减后合计信息</div>
+      <table class="sd-table">
+        <thead>
+          <tr>
+            <th class="num">抵减后合计</th>
+          </tr>
+        </thead>
+        <tbody id="rcTotalBody"></tbody>
+      </table>
+    </div>
+    <div class="sd-footer">
+      <button class="btn btn-primary" onclick="closeRcDialog()">返 回</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ===== 侧边栏折叠 ===== */
 var sider = document.getElementById('sider');
@@ -1325,6 +1378,10 @@ function agingCell(col, row) {
   }
   if (AGE_RANGE_LABELS[col.k] && Number(v) !== 0) {
     return '<a class="op-link" title="查看账龄明细" onclick="openAgeDetail(\'' + row[13] + '\',\'' + col.k + '\',' + Number(v) + ')">'
+      + fmtNum(v) + '</a>';
+  }
+  if (col.k === 'pending' && Number(v) !== 0) {
+    return '<a class="op-link" title="查看待核销充值明细" onclick="openRcDetail(\'' + row[13] + '\',' + Number(v) + ')">'
       + fmtNum(v) + '</a>';
   }
   if (col.num) return fmtNum(v);
@@ -1861,6 +1918,99 @@ function closeAgeDialog() { ageDialog.classList.remove('open'); }
 
 ageDialog.addEventListener('click', function (e) {
   if (e.target === this) closeAgeDialog();
+});
+
+/* ===== 待核销充值金额弹窗：按客户代码取充值单及其抵减流水，合计恒等于点击的待核销充值金额 ===== */
+var rcDialog = document.getElementById('rcDialog');
+
+function openRcDetail(custCode, amount) {
+  var afterTotal = Math.round((Number(amount) || 0) * 100) / 100;
+  document.getElementById('rcDialogTitle').textContent = '待核销充值金额明细 - ' + custCode;
+
+  /* 该客户的充值单 */
+  var rns = {};
+  PROC_RESULT.documents.forEach(function (d) {
+    if (d.type === '充值单' && String(d.custCode || '').toUpperCase() === String(custCode || '').toUpperCase()) rns[d.no] = true;
+  });
+  var evs = PROC_RESULT.events.filter(function (e) { return rns[e.srcNo]; });
+  var docMap = {};
+  PROC_RESULT.documents.forEach(function (d) { docMap[d.no] = d; });
+
+  var items = [], matched = {}, offsetTotal = 0;
+  evs.forEach(function (e) {
+    if (!rns[e.srcNo]) return;
+    matched[e.srcNo] = true;
+    offsetTotal += e.amt;
+    items.push({ rc: docMap[e.srcNo], ev: e });
+  });
+  Object.keys(rns).forEach(function (no) {
+    if (matched[no]) return;
+    items.push({ rc: docMap[no], ev: null }); /* 未抵减充值单：本次抵减金额按 0 */
+  });
+  offsetTotal = Math.round(offsetTotal * 100) / 100;
+
+  /* 无真实流水时填充测试数据占位 */
+  if (!items.length) {
+    var demoOffset = Math.round(Math.abs(afterTotal) * 0.1 * 100) / 100;
+    var demoA1 = Math.round(demoOffset * 0.6 * 100) / 100;
+    var demoA2 = Math.round((demoOffset - demoA1) * 100) / 100;
+    var demoData = [
+      { no: 'RN202611160101', cur: 'CNY', rate: 1, amt: demoA1, target: 'B' + custCode + '202609150003' },
+      { no: 'RN202611160102', cur: 'USD', rate: 7.1311, amt: demoA2, target: 'B' + custCode + '202610120004' }
+    ];
+    demoData.forEach(function (d) {
+      items.push({
+        rc: { no: d.no, cur: d.cur, rate: d.rate, cny: 0 },
+        ev: { type: '充值单抵减', srcNo: d.no, targetNo: d.target, amt: d.amt }
+      });
+    });
+    offsetTotal = demoOffset;
+    document.getElementById('rcDialogTitle').textContent += '（测试数据占位）';
+  }
+
+  /* 待核销金额(CNY)按权重分摊，使 合计 - 本次抵减合计 = 当前待核销充值金额 */
+  var beforeTotal = Math.round((afterTotal + offsetTotal) * 100) / 100;
+  var weights = items.map(function (it) { return it.ev ? Math.max(it.ev.amt, 0) : 0; });
+  var wSum = weights.reduce(function (s, w) { return s + w; }, 0);
+  var allocated = 0;
+  items.forEach(function (it, i) {
+    var cny = i === items.length - 1
+      ? Math.round((beforeTotal - allocated) * 100) / 100
+      : Math.round(beforeTotal * (wSum ? weights[i] / wSum : 1 / items.length) * 100) / 100;
+    allocated = Math.round((allocated + cny) * 100) / 100;
+    it.cny = cny;
+    it.amtO = it.rc.rate ? Math.round(cny / it.rc.rate * 100) / 100 : cny;
+  });
+
+  var billRows = '', offsetRows = '';
+  items.forEach(function (it) {
+    billRows += '<tr>'
+      + '<td>' + ('ZJLS' + it.rc.no.slice(2)) + '</td>'
+      + '<td>' + it.rc.no + '</td>'
+      + '<td class="num">' + fmtNum(it.amtO) + '</td>'
+      + '<td>' + (it.rc.cur || '--') + '</td>'
+      + '<td class="num">' + fmtNum(it.rc.rate, 4) + '</td>'
+      + '<td class="num">' + fmtNum(it.cny) + '</td>'
+      + '</tr>';
+    offsetRows += '<tr>'
+      + '<td>' + (it.ev ? tag(it.ev.type, 'success') : '--') + '</td>'
+      + '<td>' + (it.ev ? it.ev.srcNo : '--') + '</td>'
+      + '<td>' + (it.ev ? it.ev.targetNo : '--') + '</td>'
+      + '<td class="num">' + fmtNum(it.ev ? it.ev.amt : 0) + '</td>'
+      + '</tr>';
+  });
+  document.getElementById('rcBillBody').innerHTML = billRows;
+  document.getElementById('rcOffsetBody').innerHTML = offsetRows;
+  document.getElementById('rcTotalBody').innerHTML = '<tr class="sd-sum">'
+    + '<td class="num">' + fmtNum(afterTotal) + '</td>'
+    + '</tr>';
+  rcDialog.classList.add('open');
+}
+
+function closeRcDialog() { rcDialog.classList.remove('open'); }
+
+rcDialog.addEventListener('click', function (e) {
+  if (e.target === this) closeRcDialog();
 });
 
 /* ======================================================
