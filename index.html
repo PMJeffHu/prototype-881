@@ -913,8 +913,9 @@
             <div class="wf-fields cols3">
               <div class="wf-fi"><label>客户代码:</label><div class="wf-ctl"><input class="wf-input" value="G5099"></div></div>
               <div class="wf-fi"><label>销售代表:</label><div class="wf-static">胡俊峰</div></div>
-              <div class="wf-fi"><label>应收未到期(CNY):</label><div class="wf-static">0.00 W</div></div>
-              <div class="wf-fi"><label>最近成交时间:</label><div class="wf-static">2021-05-07 21:27:50</div></div>
+              <div class="wf-fi"><label>近一年销售(CNY):</label><div class="wf-static">0.00</div></div>
+              <div class="wf-fi"><label>首次成交时间:</label><div class="wf-static">2021-05-07 21:27:50</div></div>
+              <div class="wf-fi"><label>客户体量:</label><div class="wf-static">0.00 W</div></div>
             </div>
             <div class="wf-fi" style="margin-top:14px;">
               <label>本单原因:</label>
@@ -935,7 +936,9 @@
                     <th style="width:36px;"><input type="checkbox" class="el-checkbox"></th>
                     <th style="width:48px;">序号</th>
                     <th style="width:130px;">客户编号</th>
-                    <th>银行信息</th>
+                    <th>签约业务</th>
+                    <th>管控方式</th>
+                    <th>出账周期（天）</th>
                     <th>付款周期</th>
                     <th>应收账款(CNY)</th>
                     <th>未逾期合计(CNY)</th>
@@ -943,6 +946,10 @@
                     <th>逾期1-30天金额(CNY)</th>
                     <th>逾期31-60天金额(CNY)</th>
                     <th>逾期61-90天金额(CNY)</th>
+                    <th>逾期91-180天金额(CNY)</th>
+                    <th>逾期180-360金额(CNY)</th>
+                    <th>逾期&gt;360天金额(CNY)</th>
+                    <th style="width:110px;">操作</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -951,17 +958,23 @@
                     <td>1</td>
                     <td><select class="wf-input"><option>ACG00993</option></select></td>
                     <td>海外仓储</td>
+                    <td>账期管控</td>
+                    <td>0</td>
                     <td>0</td>
                     <td class="num">0.00</td>
                     <td class="num">--</td><td class="num">--</td>
                     <td class="num">--</td><td class="num">--</td><td class="num">--</td>
+                    <td class="num">--</td><td class="num">--</td><td class="num">--</td>
+                    <td><a class="op-link" onclick="alert('原型演示：删除')">删除</a><a class="op-link" onclick="alert('原型演示：复制')">复制</a></td>
                   </tr>
                   <tr class="sum">
-                    <td colspan="5">合计</td>
+                    <td colspan="7">合计</td>
                     <td class="num">0.00</td><td class="num">0.00</td><td class="num">0.00</td>
                     <td class="num">0.00</td><td class="num">0.00</td><td class="num">0.00</td>
+                    <td class="num">0.00</td><td class="num">0.00</td><td class="num">0.00</td>
+                    <td></td>
                   </tr>
-                  <tr><td colspan="11" class="wf-add">＋</td></tr>
+                  <tr><td colspan="17" class="wf-add">＋</td></tr>
                 </tbody>
               </table>
             </div>
