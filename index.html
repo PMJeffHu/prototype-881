@@ -449,11 +449,6 @@
           <i class="mi-icon">📊</i><span class="mi-text">客户逾期账龄表</span>
         </div>
       </li>
-      <li class="menu-item" data-view="offset" title="逾期账单抵减明细">
-        <div class="mi-row" onclick="switchView('offset')">
-          <i class="mi-icon">🧾</i><span class="mi-text">逾期账单抵减明细</span>
-        </div>
-      </li>
       <li class="menu-item" data-view="offsetnew" title="逾期账单抵减明细NEW">
         <div class="mi-row" onclick="switchView('offsetnew')">
           <i class="mi-icon">📄</i><span class="mi-text">逾期账单抵减明细NEW</span>
@@ -703,163 +698,6 @@
               <button class="pg-btn" id="aPgNext" onclick="cur.goPage(1)">下一页</button>
               <div class="pg-jumper">
                 <span>前往</span><input type="number" min="1" id="aPgJump" value="1"><span>页</span>
-                <button class="btn" style="height:26px;padding:0 10px;" onclick="cur.goPage()">GO</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ================================================== -->
-      <!-- 视图二：逾期账单抵减明细 -->
-      <!-- ================================================== -->
-      <div class="view" id="view-offset">
-
-        <!-- 筛选区 -->
-        <div class="card">
-          <div class="card-body">
-
-            <div class="seg-row">
-              <span class="seg-label">状态:</span>
-              <div class="seg-group">
-                <button class="seg-btn active" onclick="segPick(this)">全部</button>
-                <button class="seg-btn" onclick="segPick(this)">成功</button>
-                <button class="seg-btn" onclick="segPick(this)">处理中</button>
-                <button class="seg-btn" onclick="segPick(this)">失败</button>
-              </div>
-            </div>
-
-            <div class="filter-grid adv-collapsed">
-              <div class="fi">
-                <label>账单号:</label>
-                <div class="fi-controls">
-                  <input type="text" class="el-input" id="oBillNo" placeholder="多个以分号隔开，最多200个">
-                </div>
-              </div>
-              <div class="fi">
-                <label>客户代码:</label>
-                <div class="fi-controls">
-                  <input type="text" class="el-input" id="oCustCode" placeholder="多个以分号隔开，最多200个">
-                </div>
-              </div>
-              <div class="fi">
-                <label>账户编码:</label>
-                <div class="fi-controls">
-                  <input type="text" class="el-input" id="oAcctCode" placeholder="多个以分号隔开，最多200个">
-                </div>
-              </div>
-              <div class="fi">
-                <label>客户星级:</label>
-                <div class="fi-controls">
-                  <select class="el-select" id="oStar"><option value="">请选择客户星级</option><option>1</option><option>3</option></select>
-                </div>
-              </div>
-
-              <div class="fi">
-                <label>销售区域:</label>
-                <div class="fi-controls">
-                  <select class="el-select" id="oArea"><option value="">请选择销售区域</option><option>战略客户部</option><option>美洲销售组</option><option>华北区</option><option>华东区</option><option>广佛区</option><option>品牌客户组</option><option>英国销售组</option><option>默认销售区域</option><option>测试专用产品业务勿用</option></select>
-                </div>
-              </div>
-              <div class="fi">
-                <label>销售代表:</label>
-                <div class="fi-controls">
-                  <input type="text" class="el-input" id="oSalesRep" placeholder="请输入销售代表">
-                </div>
-              </div>
-              <div class="fi">
-                <label>账单币种:</label>
-                <div class="fi-controls">
-                  <select class="el-select" id="oCur"><option value="">请选择账单币种</option><option>CNY</option><option>EUR</option><option>USD</option><option>HKD</option><option>MXN</option><option>GBP</option><option>JPY</option></select>
-                </div>
-              </div>
-
-              <div class="fi">
-                <label>逾期天数:</label>
-                <div class="fi-controls">
-                  <div class="range-group">
-                    <input type="text" class="el-input" placeholder="最小值">
-                    <span class="range-sep">-</span>
-                    <input type="text" class="el-input" placeholder="最大值">
-                  </div>
-                </div>
-              </div>
-              <div class="fi">
-                <label>逾期金额(CNY):</label>
-                <div class="fi-controls">
-                  <div class="range-group">
-                    <input type="text" class="el-input" placeholder="最小值">
-                    <span class="range-sep">-</span>
-                    <input type="text" class="el-input" placeholder="最大值">
-                  </div>
-                </div>
-              </div>
-              <div class="fi">
-                <label>批次号:</label>
-                <div class="fi-controls">
-                  <input type="text" class="el-input" id="oBatchNo" placeholder="请输入批次号">
-                </div>
-              </div>
-              <div class="fi">
-                <label>时间:</label>
-                <div class="fi-controls">
-                  <div class="range-group">
-                    <select class="el-select"><option>更新时间</option></select>
-                    <input type="date" class="el-input" value="2026-11-12">
-                    <span class="range-sep">-</span>
-                    <input type="date" class="el-input" value="2026-11-12">
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="filter-actions">
-              <button class="btn btn-primary" onclick="cur.doSearch()">查 询</button>
-              <button class="btn" onclick="cur.doReset()">重 置</button>
-              <button class="link-expand" onclick="toggleAdvanced(this)">展开高级查询 ∨</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 表格区 -->
-        <div class="card">
-          <div class="card-body">
-            <div class="table-toolbar">
-              <div class="toolbar-left">
-                <button class="btn btn-primary" onclick="alert('原型演示：手动执行')">手动执行<span class="btn-sup">1</span></button>
-                <button class="btn btn-primary" onclick="alert('原型演示：手动同步')">手动同步<span class="btn-sup">2</span></button>
-                <button class="btn btn-primary" onclick="alert('原型演示：批量重试')">批量重试<span class="btn-sup">3</span></button>
-                <button class="btn btn-primary" onclick="alert('原型演示：导出')">⬇ 导出</button>
-                <button class="btn btn-primary" onclick="alert('原型演示：一键查看原文')">一键查看原文</button>
-              </div>
-              <div class="sum-box">
-                <button class="btn btn-primary" onclick="openSumDialog()">合计金额</button>
-              </div>
-            </div>
-
-            <div class="table-wrap">
-              <table class="el-table">
-                <thead id="oHead"></thead>
-                <tbody id="oBody"></tbody>
-              </table>
-            </div>
-
-            <!-- 分页 -->
-            <div class="pagination">
-              <span id="oPgTotal"></span>
-              <div class="pg-sizes">
-                <select class="el-select" id="oPgSize" onchange="cur.changeSize(this)">
-                  <option value="10">10条/页</option>
-                  <option value="20">20条/页</option>
-                  <option value="50">50条/页</option>
-                  <option value="100">100条/页</option>
-                </select>
-              </div>
-              <button class="pg-btn" id="oPgPrev" onclick="cur.goPage(-1)">上一页</button>
-              <span id="oPgPages"></span>
-              <button class="pg-btn" id="oPgNext" onclick="cur.goPage(1)">下一页</button>
-              <div class="pg-jumper">
-                <span>前往</span><input type="number" min="1" id="oPgJump" value="1"><span>页</span>
                 <button class="btn" style="height:26px;padding:0 10px;" onclick="cur.goPage()">GO</button>
               </div>
             </div>
@@ -1478,153 +1316,6 @@ var AGING_SUM = [
 ];
 
 /* ======================================================
-   视图二数据：逾期账单抵减明细（21 字段 / 1 行，来自 CSV）
-   ====================================================== */
-var OFFSET_COLS = [
-  { k:'billNo',    label:'账单号',           i:0,  w:170 },
-  { k:'custCode',  label:'客户代码',         i:1 },
-  { k:'acctCode',  label:'账户编码',         i:2,  w:110 },
-  { k:'signSubj',  label:'签约主体',         i:3,  w:120 },
-  { k:'servSubj',  label:'服务主体',         i:4,  w:220 },
-  { k:'custStar',  label:'客户星级',         i:5 },
-  { k:'salesArea', label:'销售区域',         i:6 },
-  { k:'salesRep',  label:'销售代表',         i:7 },
-  { k:'billCycle', label:'账单周期',         i:8,  w:260 },
-  { k:'billDate',  label:'账单账务日期',     i:9,  w:150 },
-  { k:'recvAge',   label:'应收账龄',         i:10 },
-  { k:'ovDays',    label:'逾期天数',         i:11 },
-  { k:'billCur',   label:'账单币种',         i:13 },
-  { k:'billAmt',   label:'账单金额(原币)',   i:14, num:true },
-  { k:'ovAmtO',    label:'逾期金额(原币)',   i:15, num:true },
-  { k:'rate',      label:'记账汇率',         i:16, num:true, dec:4 },
-  { k:'ovAmtC',    label:'逾期金额(CNY)',    i:17, num:true, w:130 },
-  { k:'negOffset', label:'负数账单抵减(CNY)', i:-1, num:true, w:150 },
-  { k:'fundOffset',label:'资金单抵减(CNY)',  i:-1, num:true, w:140 },
-  { k:'graceOffset',label:'宽限抵减(CNY)',   i:-1, num:true, w:140 },
-  { k:'afterAmt',  label:'抵减后金额(CNY)',  i:18, num:true, w:140 },
-  { k:'updateTime',label:'更新时间',         i:19, w:140 },
-  { k:'batchNo',   label:'批次号',           i:20, w:150 }
-];
-var OFFSET_DEFAULT = ['billNo','custCode','acctCode','signSubj','servSubj','custStar','salesArea','salesRep',
-  'billCycle','billDate','recvAge','ovDays','billCur','billAmt','ovAmtO','rate','ovAmtC','negOffset','fundOffset','graceOffset','afterAmt','updateTime','batchNo'];
-var OFFSET_ROWS = [
-  ['B20261105G5620001','G562','ACG562118','Grupo Bimbo','CIRRO FULFILLMENT MEXICO','','战略客户部','宋江','2026-10-30 00:00:00至2026-11-04 23:59:59','2026/11/4 23:59','8','8','逾期','EUR',21.6,21.6,6.1523,168.57,0,'2026/11/12 21:55','DJPC20261109001'],
-  ['B20261106G15290002','G1529','ACG15291721','HOKIE','ETARGET LIMITED','1','美洲销售组','张三','2026-11-01 00:00:00至2026-11-06 23:59:59','2026/11/6 23:59','12','10','逾期','EUR',320.5,120.35,6.1523,740.44,740.44,'2026/11/12 21:58','DJPC20261109002'],
-  ['B20261106EL28420003','EL2842','ACEL284201','Maixne','US ELOGISTICS SERVICE CORP','','美洲销售组','李四','2026-11-01 00:00:00至2026-11-06 23:59:59','2026/11/6 23:59','15','12','逾期','USD',500,200,7.1311,1426.22,1426.22,'2026/11/12 22:03','DJPC20261109003'],
-  ['B20261107G30870004','G3087','ACG308702','123456','深圳易可达科技有限公司','','测试专用产品业务勿用','王五','2026-11-02 00:00:00至2026-11-07 23:59:59','2026/11/7 23:59','8','8','已抵减','CNY',5989.6,5989.6,1.0000,5989.60,0,'2026/11/12 22:17','DJPC20261109004'],
-  ['B20261107G50670005','G5067','ACG506703','UK HAHAHA  LIMITED','Super Smart Service ltd','','华北区','张三','2026-11-02 00:00:00至2026-11-07 23:59:59','2026/11/7 23:59','21','18','逾期','GBP',800,200,8.9542,1790.84,1790.84,'2026/11/12 22:31','DJPC20261109005'],
-  ['B20261108G50880006','G5088','ACG508805','美国测试公司','US ELOGISTICS SERVICE CORP','','华北区','李四','2026-11-03 00:00:00至2026-11-08 23:59:59','2026/11/8 23:59','356','300','逾期','USD',500,100,7.1311,713.11,713.11,'2026/11/12 22:45','DJPC20261109006'],
-  ['B20261108G50170007','G5017','ACG501710','R560CA002.INC','ZENDA LOGISTICS CORP.','','广佛区','王五','2026-11-03 00:00:00至2026-11-08 23:59:59','2026/11/8 23:59','45','40','已抵减','MXN',10000,10000,0.4180,4180.00,0,'2026/11/12 23:02','DJPC20261109007'],
-  ['B20261109TYY0008','TYY','ACTYY01','LAUFUN','深圳易可达科技有限公司','','默认销售区域','张三','2026-11-04 00:00:00至2026-11-09 23:59:59','2026/11/9 23:59','30','25','逾期','CNY',49547.26,49547.26,1.0000,49547.26,24773.63,'2026/11/12 23:18','DJPC20261109008'],
-  ['B20261109G12990009','G1299','ACG129903','海飞丝','深圳易可达科技有限公司','1','默认销售区域','李四','2026-11-04 00:00:00至2026-11-09 23:59:59','2026/11/9 23:59','5','3','逾期','CNY',1228.72,1228.72,1.0000,1228.72,1228.72,'2026/11/12 23:40','DJPC20261110001'],
-  ['B20261110G13420010','G1342','ACG134217','应该','深圳易可达科技有限公司','1','默认销售区域','王五','2026-11-05 00:00:00至2026-11-10 23:59:59','2026/11/10 23:59','90','88','已抵减','CNY',130153.63,130153.63,1.0000,130153.63,0,'2026/11/12 23:55','DJPC20261110002'],
-  ['B20261110G17670011','G1767','ACG176701','深圳依时货拉拉','深圳易可达科技有限公司','1','默认销售区域','张三','2026-11-05 00:00:00至2026-11-10 23:59:59','2026/11/10 23:59','12','10','逾期','EUR',250,50,6.1523,307.62,307.62,'2026/11/13 00:05','DJPC20261110003'],
-  ['B20261110G15730012','G1573','ACG157301','深圳市爱奇迹','ELOGISTICS (GA) SERVICE CORP','1','默认销售区域','李四','2026-11-05 00:00:00至2026-11-10 23:59:59','2026/11/10 23:59','60','55','逾期','USD',1250,1250,7.1311,8913.88,8913.88,'2026/11/13 00:12','DJPC20261110004'],
-  ['B20261111G13450013','G1345','ACG134560','GD法国-徐州妙仕洁商贸有限公司','JS LOGISTICS','1','测试专用产品业务勿用','王五','2026-11-06 00:00:00至2026-11-11 23:59:59','2026/11/11 23:59','18','15','已抵减','JPY',100000,100000,0.0505,5050.00,0,'2026/11/13 00:28','DJPC20261110005'],
-  ['B20261111G16500014','G1650','ACG165001','深圳市符音科','ETARGET LIMITED','1','品牌客户组','张三','2026-11-06 00:00:00至2026-11-11 23:59:59','2026/11/11 23:59','3','1','逾期','CNY',36222.43,36222.43,1.0000,36222.43,36222.43,'2026/11/13 00:35','DJPC20261110006'],
-  ['B20261111G11490015','G1149','ACG114910','江西省韩记生鲜配送有限公司宋家坊店','深圳易可达科技有限公司','1','默认销售区域','李四','2026-11-06 00:00:00至2026-11-11 23:59:59','2026/11/11 23:59','25','22','逾期','CNY',117376.74,97071.34,1.0000,97071.34,97071.34,'2026/11/13 00:47','DJPC20261110007'],
-  ['B20261112TYKD0016','TYKD','ACTYKD30','test080702121','ETARGET LIMITED','','华东区','王五','2026-11-07 00:00:00至2026-11-12 23:59:59','2026/11/12 23:59','40','38','逾期','HKD',5000,2500,0.9130,2282.50,2282.50,'2026/11/13 01:02','DJPC20261110008'],
-  ['B20261112G51870017','G5187','ACG518702','完美集团','US ELOGISTICS SERVICE CORP','','美洲销售组','张三','2026-11-07 00:00:00至2026-11-12 23:59:59','2026/11/12 23:59','62','60','已抵减','USD',500,500,7.1311,3565.55,0,'2026/11/13 01:15','DJPC20261111001'],
-  ['B20261112T23070018','T2307','ACT230701','Yuna\'scompany12','深圳易可达科技有限公司','','测试专用产品业务勿用','李四','2026-11-07 00:00:00至2026-11-12 23:59:59','2026/11/12 23:59','2','1','逾期','CNY',329.96,329.96,1.0000,329.96,329.96,'2026/11/13 01:23','DJPC20261111002'],
-  ['B20261105G14530019','G1453','ACG145302','ababababab','深圳易可达科技有限公司','1','默认销售区域','王五','2026-10-31 00:00:00至2026-11-05 23:59:59','2026/11/5 23:59','8','6','逾期','CNY',36451.51,36451.51,1.0000,36451.51,18225.76,'2026/11/12 21:58','DJPC20261109009'],
-  ['B20261105G29610020','G2961','ACG296103','SIGJH','深圳易可达科技有限公司','','测试专用产品业务勿用','张三','2026-10-31 00:00:00至2026-11-05 23:59:59','2026/11/5 23:59','15','12','逾期','CNY',22306.85,22306.85,1.0000,22306.85,22306.85,'2026/11/12 22:03','DJPC20261109010'],
-  ['B20261106G12620021','G1262','ACG126204','esignt','深圳易可达科技有限公司','','测试专用产品业务勿用','李四','2026-11-01 00:00:00至2026-11-06 23:59:59','2026/11/6 23:59','10','8','已抵减','CNY',38333.50,38333.50,1.0000,38333.50,0,'2026/11/12 22:17','DJPC20261109011'],
-  ['B20261106EL26360022','EL2636','ACEL263601','B2OF','深圳易可达科技有限公司','','测试专用产品业务勿用','王五','2026-11-01 00:00:00至2026-11-06 23:59:59','2026/11/6 23:59','5','3','逾期','CNY',137230.71,137230.71,1.0000,137230.71,137230.71,'2026/11/12 22:31','DJPC20261109012'],
-  ['B20261107EL25530023','EL2553','ACEL255301','SPS','ETARGET LIMITED','','美洲销售组','张三','2026-11-02 00:00:00至2026-11-07 23:59:59','2026/11/7 23:59','75','71','逾期','EUR',500,100,6.1523,615.23,615.23,'2026/11/12 22:45','DJPC20261109013'],
-  ['B20261107EL1220024','EL122','ACEL12248','FSDFSF','ETARGET LIMITED','3','美洲销售组','李四','2026-11-02 00:00:00至2026-11-07 23:59:59','2026/11/7 23:59','120','118','逾期','GBP',1000,800,8.9542,7163.36,7163.36,'2026/11/12 23:02','DJPC20261109014'],
-  ['B20261108G13000025','G1300','ACG130001','纵腾网络','深圳易可达科技有限公司','1','默认销售区域','王五','2026-11-03 00:00:00至2026-11-08 23:59:59','2026/11/8 23:59','88','85','逾期','CNY',21060.56,21060.56,1.0000,21060.56,21060.56,'2026/11/12 23:18','DJPC20261109015'],
-  ['B20261108G12600026','G1260','ACG126003','abcABC','深圳易可达科技有限公司','','测试专用产品业务勿用','张三','2026-11-03 00:00:00至2026-11-08 23:59:59','2026/11/8 23:59','6','4','逾期','HKD',2500,1250,0.9130,1141.25,1141.25,'2026/11/12 23:40','DJPC20261109016'],
-  ['B20261109EL28160027','EL2816','ACEL281601','长乐项目验证','ETARGET LIMITED','','默认销售区域','李四','2026-11-04 00:00:00至2026-11-09 23:59:59','2026/11/9 23:59','9','7','已抵减','CNY',1079.16,1079.16,1.0000,1079.16,0,'2026/11/12 23:55','DJPC20261111003'],
-  ['B20261109EL28850028','EL2885','ACEL288501','company2815','22日発株式会社','','美洲销售组','王五','2026-11-04 00:00:00至2026-11-09 23:59:59','2026/11/9 23:59','12','10','逾期','JPY',50000,30000,0.0505,1515.00,1515.00,'2026/11/13 00:05','DJPC20261111004'],
-  ['B20261109G5620029','G562','ACG562109','ABC company','ELOGISTICS (GA) SERVICE CORP','','战略客户部','张三','2026-11-04 00:00:00至2026-11-09 23:59:59','2026/11/9 23:59','55','50','逾期','EUR',200,200,6.1523,1230.46,1230.46,'2026/11/13 00:12','DJPC20261111005'],
-  ['B20261110G50670030','G5067','ACG506702','US XIONGMAO INC','US ELOGISTICS SERVICE CORP','','华北区','李四','2026-11-05 00:00:00至2026-11-10 23:59:59','2026/11/10 23:59','365','360','逾期','MXN',8000,8000,0.4180,3344.00,3344.00,'2026/11/13 00:28','DJPC20261111006'],
-  ['B20261110G11490031','G1149','ACG114911','aaa','深圳易可达科技有限公司','1','默认销售区域','王五','2026-11-05 00:00:00至2026-11-10 23:59:59','2026/11/10 23:59','4','2','逾期','CNY',14570.38,14570.38,1.0000,14570.38,14570.38,'2026/11/13 00:35','DJPC20261111007'],
-  ['B20261111G11490032','G1149','ACG114901','test','深圳易可达科技有限公司','1','默认销售区域','张三','2026-11-06 00:00:00至2026-11-11 23:59:59','2026/11/11 23:59','20','18','逾期','CNY',5111.75,5111.75,1.0000,5111.75,2555.88,'2026/11/13 00:47','DJPC20261111008'],
-  ['B20261111G13450033','G1345','ACG134569','深圳市神舟电脑股份有限公司2','深圳易可达科技有限公司','1','测试专用产品业务勿用','李四','2026-11-06 00:00:00至2026-11-11 23:59:59','2026/11/11 23:59','7','5','已抵减','CNY',606.81,606.81,1.0000,606.81,0,'2026/11/13 01:02','DJPC20261112001'],
-  ['B20261111G13450034','G1345','ACG134559','GD日本 -广州市洁骅企业策划有限公司','22日発株式会社','1','测试专用产品业务勿用','王五','2026-11-06 00:00:00至2026-11-11 23:59:59','2026/11/11 23:59','16','14','逾期','JPY',200000,200000,0.0505,10100.00,10100.00,'2026/11/13 01:15','DJPC20261112002'],
-  ['B20261112G50170035','G5017','ACG501702','CHANGLE.INC','深圳易可达科技有限公司','','广佛区','张三','2026-11-07 00:00:00至2026-11-12 23:59:59','2026/11/12 23:59','33','30','逾期','CNY',94318.06,94318.06,1.0000,94318.06,94318.06,'2026/11/13 01:23','DJPC20261112003'],
-  ['B20261112G50170036','G5017','ACG501709','R560JP.INC','22日発株式会社','','广佛区','李四','2026-11-07 00:00:00至2026-11-12 23:59:59','2026/11/12 23:59','1','1','逾期','JPY',25000,25000,0.0505,1262.50,1262.50,'2026/11/13 01:31','DJPC20261112004'],
-  ['B20261112G15290037','G1529','ACG1529867','Yuna-1111111','深圳易可达科技有限公司','1','美洲销售组','王五','2026-11-07 00:00:00至2026-11-12 23:59:59','2026/11/12 23:59','28','25','逾期','CNY',35844.31,35844.31,1.0000,35844.31,35844.31,'2026/11/13 01:38','DJPC20261112005'],
-  ['B20261104G15290038','G1529','ACG15291703','Autotest2917414','深圳易可达科技有限公司','1','美洲销售组','张三','2026-10-30 00:00:00至2026-11-04 23:59:59','2026/11/4 23:59','9','6','逾期','CNY',3692.78,3692.78,1.0000,3692.78,3692.78,'2026/11/12 21:55','DJPC20261109017'],
-  ['B20261104G5620039','G562','ACG56281','福州市长乐区建设发展集团有限公司','深圳易可达科技有限公司','','战略客户部','王五','2026-10-30 00:00:00至2026-11-04 23:59:59','2026/11/4 23:59','14','12','已抵减','USD',75,75,7.1311,534.83,0,'2026/11/12 21:58','DJPC20261109018'],
-  ['B20261105G15290040','G1529','ACG15291705','esigntest纵腾网络测试13','深圳易可达科技有限公司','1','美洲销售组','张三','2026-10-31 00:00:00至2026-11-05 23:59:59','2026/11/5 23:59','2','2','逾期','CNY',27761.57,27761.57,1.0000,27761.57,27761.57,'2026/11/12 22:03','DJPC20261109019'],
-  ['B20261105G50170041','G5017','ACG501705','USTEST.INC','US ELOGISTICS SERVICE CORP','','广佛区','李四','2026-10-31 00:00:00至2026-11-05 23:59:59','2026/11/5 23:59','47','44','逾期','HKD',8000,8000,0.9130,7304.00,7304.00,'2026/11/12 22:31','DJPC20261109020'],
-  ['B20261106G15290042','G1529','ACG152901','真实影像','深圳易可达科技有限公司','1','美洲销售组','王五','2026-11-01 00:00:00至2026-11-06 23:59:59','2026/11/6 23:59','180','175','逾期','CNY',315803.39,315803.39,1.0000,315803.39,315803.39,'2026/11/12 22:45','DJPC20261109021'],
-  ['B20261106G13420043','G1342','ACG134214','adf','深圳易可达科技有限公司','1','英国销售组','张三','2026-11-01 00:00:00至2026-11-06 23:59:59','2026/11/6 23:59','245','240','逾期','EUR',1000,1000,6.1523,6152.30,6152.30,'2026/11/12 23:02','DJPC20261109022'],
-  ['B20261107TYKD0044','TYKD','ACTYKD27','三只松鼠股份有限公司','深圳市前海云途物流有限公司上海分公司','','华东区','李四','2026-11-02 00:00:00至2026-11-07 23:59:59','2026/11/7 23:59','11','9','逾期','CNY',4136.75,4136.75,1.0000,4136.75,4136.75,'2026/11/12 23:18','DJPC20261109023'],
-  ['B20261107G15290045','G1529','ACG15291712','y:a li，n Eli；g.n,lo、lo。(kjhf);','US ELOGISTICS SERVICE CORP','1','美洲销售组','王五','2026-11-02 00:00:00至2026-11-07 23:59:59','2026/11/7 23:59','6','5','逾期','EUR',45.8,45.8,6.1523,281.78,281.78,'2026/11/12 23:40','DJPC20261109024'],
-  ['B20261108G5620046','G562','ACG562107','英国本土国家','Super Smart Service ltd','','战略客户部','张三','2026-11-03 00:00:00至2026-11-08 23:59:59','2026/11/8 23:59','150','148','逾期','USD',1500,1500,7.1311,10696.65,10696.65,'2026/11/12 23:55','DJPC20261109025'],
-  ['B20261108EL1220047','EL122','ACEL12239','Maxine-test-uat1','深圳易可达科技有限公司','3','美洲销售组','李四','2026-11-03 00:00:00至2026-11-08 23:59:59','2026/11/8 23:59','365','362','逾期','CNY',364790.41,364790.41,1.0000,364790.41,364790.41,'2026/11/13 00:05','DJPC20261111009'],
-  ['B20261109G17670048','G1767','ACG176701','深圳依时货拉拉','深圳易可达科技有限公司','1','默认销售区域','宋江','2026-11-04 00:00:00至2026-11-09 23:59:59','2026/11/9 23:59','13','11','逾期','HKD',1000,1000,0.9130,913.00,913.00,'2026/11/13 00:12','DJPC20261111010'],
-  ['B20261110TYKD0049','TYKD','ACTYKD30','test080702121','ETARGET LIMITED','','华东区','宋江','2026-11-05 00:00:00至2026-11-10 23:59:59','2026/11/10 23:59','52','48','已抵减','MXN',5000,5000,0.4180,2090.00,0,'2026/11/13 00:28','DJPC20261111011'],
-  ['B20261111G50670050','G5067','ACG506703','UK HAHAHA  LIMITED','Super Smart Service ltd','','华北区','宋江','2026-11-06 00:00:00至2026-11-11 23:59:59','2026/11/11 23:59','30','28','逾期','GBP',150,150,8.9542,1343.13,1343.13,'2026/11/13 00:35','DJPC20261111012']
-];
-
-/* 抵减来源三分量：按行轮换来源构成，将抵减总额拆分为 负数账单/资金单/宽限 三个非负分量
-   恒等式：逾期金额(CNY) - 负数账单抵减 - 资金单抵减 - 宽限抵减 = 抵减后金额(CNY) */
-var OFFSET_SPLIT_W = [
-  [1, 0, 0], [0, 1, 0], [0, 0, 1],
-  [0.6, 0.4, 0], [0, 0.55, 0.45], [0.45, 0, 0.55], [0.4, 0.35, 0.25]
-];
-var OFFSET_SPLIT = new Map();
-OFFSET_ROWS.forEach(function (row, i) {
-  var total = Math.round((Number(row[17]) - Number(row[18])) * 100) / 100;
-  var sp;
-  if (!isFinite(total) || total <= 0) {
-    sp = [0, 0, 0];
-  } else {
-    var w = OFFSET_SPLIT_W[i % 7];
-    var a = Math.round(total * w[0] * 100) / 100;
-    var b = Math.round(total * w[1] * 100) / 100;
-    sp = [a, b, Math.round((total - a - b) * 100) / 100];
-  }
-  OFFSET_SPLIT.set(row, sp);
-});
-
-function offsetCell(col, row) {
-  var v = row[col.i];
-  /* 三个抵减来源分量，和恒等于 逾期金额(CNY) - 抵减后金额(CNY)；负数账单抵减展示为带符号负数 */
-  if (col.k === 'negOffset' || col.k === 'fundOffset' || col.k === 'graceOffset') {
-    var sp = OFFSET_SPLIT.get(row) || [0, 0, 0];
-    if (col.k === 'negOffset') return fmtNum(sp[0] ? -sp[0] : 0);
-    return fmtNum(col.k === 'fundOffset' ? sp[1] : sp[2]);
-  }
-  if (col.num) return fmtNum(v, col.dec);
-  return fmtText(v);
-}
-
-/* 抵减明细筛选逻辑 */
-function offsetFilters() {
-  var res = OFFSET_ROWS.slice();
-  [['oBillNo', 0], ['oCustCode', 1], ['oAcctCode', 2], ['oSalesRep', 7], ['oBatchNo', 20]].forEach(function (pair) {
-    var kw = gv(pair[0]);
-    if (kw) {
-      var keys = kw.split(/[;；]/).map(function (s) { return s.trim().toUpperCase(); }).filter(Boolean);
-      res = res.filter(function (r) {
-        return keys.some(function (k) { return String(r[pair[1]]).toUpperCase().indexOf(k) > -1; });
-      });
-    }
-  });
-  [['oStar', 5], ['oArea', 6], ['oCur', 13]].forEach(function (pair) {
-    var v = gv(pair[0]);
-    if (v) res = res.filter(function (r) { return String(r[pair[1]]).indexOf(v) > -1; });
-  });
-  return res;
-}
-
-/* 合计金额弹窗数据：按币种自动汇总（原币逾期金额 / CNY 逾期金额） */
-var OFFSET_SUM = (function () {
-  var map = {};
-  OFFSET_ROWS.forEach(function (r) {
-    var c = r[13];
-    if (!map[c]) map[c] = [0, 0];
-    map[c][0] += Number(r[15]);
-    map[c][1] += Number(r[17]);
-  });
-  return Object.keys(map).map(function (k) { return [map[k][0], k, map[k][1]]; });
-})();
-
-/* ======================================================
    视图三数据：逾期账单抵减过程（四类单据，多币种）
    PROC_POS：[账单号, 逾期天数, 账单币种, 逾期金额原币(>0), 当月记账汇率]
    PROC_NEG：[账单号, 逾期天数, 账单币种, 逾期金额原币(<0), 当月记账汇率]
@@ -1943,17 +1634,6 @@ var PAGES = {
     sumData: AGING_SUM,
     applyFilters: function () { this.filtered = agingFilters(); }
   }),
-  offset: createPage({
-    key: 'offset',
-    COLS: OFFSET_COLS,
-    DEFAULT_VISIBLE: OFFSET_DEFAULT,
-    rows: OFFSET_ROWS,
-    el: { head: 'oHead', body: 'oBody', pgTotal: 'oPgTotal', pgPages: 'oPgPages', pgPrev: 'oPgPrev', pgNext: 'oPgNext', pgJump: 'oPgJump' },
-    cellHtml: offsetCell,
-    sumTitle: '合计金额',
-    sumData: OFFSET_SUM,
-    applyFilters: function () { this.filtered = offsetFilters(); }
-  }),
   process: createPage({
     key: 'process',
     COLS: PROC_EVENT_COLS,
@@ -2002,7 +1682,7 @@ function onDocFilters() {
   return res;
 }
 
-var VIEW_NAMES = { aging: '客户逾期账龄表', offset: '逾期账单抵减明细', offsetnew: '逾期账单抵减明细NEW', process: '逾期账单抵减过程' };
+var VIEW_NAMES = { aging: '客户逾期账龄表', offsetnew: '逾期账单抵减明细NEW', process: '逾期账单抵减过程' };
 var cur = PAGES.aging;
 
 function switchView(key) {
@@ -2120,7 +1800,6 @@ sumDialog.addEventListener('click', function (e) {
 
 /* ===== 初始化 ===== */
 PAGES.aging.render();
-PAGES.offset.render();
 PAGES.process.render();
 PAGES.offsetnew.render();
 </script>
