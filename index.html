@@ -1546,11 +1546,19 @@ PROC_RESULT.documents.forEach(function (d, i) {
   d.ageRange = procAgeRange(d);
 });
 
-/* 抵减过程记录：批次/更新时间取来源单据的批次与时间 */
+/* 抵减过程记录：批次以正数账单为单位——同一目标账单的全部抵减事件（负数账单/充值单/宽限单）
+   共享同一批次，账单被抵减完即批次结束；批次号按目标账单首次被抵减顺序编号。
+   更新时间取来源单据的更新时间 */
+var procBatchMap = {};
+var procBatchSeq = 0;
 PROC_RESULT.events.forEach(function (e) {
+  if (!procBatchMap[e.targetNo]) {
+    procBatchSeq++;
+    procBatchMap[e.targetNo] = 'DJPC20261116' + ('000000' + procBatchSeq).slice(-6);
+  }
+  e.batchNo = procBatchMap[e.targetNo];
   var src = null;
   PROC_RESULT.documents.forEach(function (d) { if (d.no === e.srcNo) src = d; });
-  e.batchNo = src ? src.batchNo : '';
   e.updateTime = src ? src.updateTime : '';
 });
 
