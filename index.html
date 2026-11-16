@@ -748,9 +748,6 @@
           <div class="card-body">
             <div class="table-toolbar">
               <div class="toolbar-left">
-                <button class="btn btn-primary" onclick="alert('原型演示：手动执行抵减计算')">手动执行<span class="btn-sup">1</span></button>
-                <button class="btn btn-primary" onclick="alert('原型演示：手动同步')">手动同步<span class="btn-sup">2</span></button>
-                <button class="btn btn-primary" onclick="alert('原型演示：批量重试')">批量重试<span class="btn-sup">3</span></button>
                 <button class="btn btn-primary" onclick="alert('原型演示：导出 Excel')">⬇ 导出</button>
                 <button class="btn btn-primary" onclick="alert('原型演示：一键查看原文')">一键查看原文</button>
               </div>
@@ -1722,10 +1719,7 @@ var PAGES = {
     rows: PROC_RESULT.events,
     el: { head: 'pEvHead', body: 'pEvBody', pgTotal: 'pEvPgTotal', pgPages: 'pEvPgPages', pgPrev: 'pEvPgPrev', pgNext: 'pEvPgNext', pgJump: 'pEvPgJump' },
     cellHtml: procEventCell,
-    opHtml: function (e) {
-      return '<a class="op-link" onclick="openProcDetail(\'' + e.srcNo + '\')">抵减单据明细</a>'
-        + '<a class="op-link" onclick="openProcDetail(\'' + e.targetNo + '\')">被抵减单据明细</a>';
-    },
+    opHtml: function () { return '<a class="op-link" onclick="rowOp(\'查看原文\', this)">查看原文</a>'; },
     applyFilters: function () { this.filtered = procEventFilters(); }
   }),
   offsetnew: createPage({
