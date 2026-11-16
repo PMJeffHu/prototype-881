@@ -1464,13 +1464,15 @@ var OFFSET_COLS = [
   { k:'ovAmtO',    label:'逾期金额(原币)',   i:15, num:true },
   { k:'rate',      label:'记账汇率',         i:16, num:true, dec:4 },
   { k:'ovAmtC',    label:'逾期金额(CNY)',    i:17, num:true, w:130 },
-  { k:'offsetAmt', label:'抵减金额(CNY)',    i:-1, num:true, w:140 },
+  { k:'negOffset', label:'负数账单抵减(CNY)', i:-1, num:true, w:150 },
+  { k:'fundOffset',label:'资金单抵减(CNY)',  i:-1, num:true, w:140 },
+  { k:'graceOffset',label:'宽限抵减(CNY)',   i:-1, num:true, w:140 },
   { k:'afterAmt',  label:'抵减后金额(CNY)',  i:18, num:true, w:140 },
   { k:'updateTime',label:'更新时间',         i:19, w:140 },
   { k:'batchNo',   label:'批次号',           i:20, w:150 }
 ];
 var OFFSET_DEFAULT = ['billNo','custCode','acctCode','signSubj','servSubj','custStar','salesArea','salesRep',
-  'billCycle','billDate','recvAge','ovDays','billCur','billAmt','ovAmtO','rate','ovAmtC','offsetAmt','afterAmt','updateTime','batchNo'];
+  'billCycle','billDate','recvAge','ovDays','billCur','billAmt','ovAmtO','rate','ovAmtC','negOffset','fundOffset','graceOffset','afterAmt','updateTime','batchNo'];
 var OFFSET_ROWS = [
   ['B20261105G5620001','G562','ACG562118','Grupo Bimbo','CIRRO FULFILLMENT MEXICO','','战略客户部','宋江','2026-10-30 00:00:00至2026-11-04 23:59:59','2026/11/4 23:59','8','8','逾期','EUR',21.6,21.6,6.1523,168.57,0,'2026/11/12 21:55','DJPC20261109001'],
   ['B20261106G15290002','G1529','ACG15291721','HOKIE','ETARGET LIMITED','1','美洲销售组','张三','2026-11-01 00:00:00至2026-11-06 23:59:59','2026/11/6 23:59','12','10','逾期','EUR',320.5,120.35,6.1523,740.44,740.44,'2026/11/12 21:58','DJPC20261109002'],
@@ -1524,10 +1526,34 @@ var OFFSET_ROWS = [
   ['B20261111G50670050','G5067','ACG506703','UK HAHAHA  LIMITED','Super Smart Service ltd','','华北区','宋江','2026-11-06 00:00:00至2026-11-11 23:59:59','2026/11/11 23:59','30','28','逾期','GBP',150,150,8.9542,1343.13,1343.13,'2026/11/13 00:35','DJPC20261111012']
 ];
 
+/* 抵减来源三分量：按行轮换来源构成，将抵减总额拆分为 负数账单/资金单/宽限 三个非负分量
+   恒等式：逾期金额(CNY) - 负数账单抵减 - 资金单抵减 - 宽限抵减 = 抵减后金额(CNY) */
+var OFFSET_SPLIT_W = [
+  [1, 0, 0], [0, 1, 0], [0, 0, 1],
+  [0.6, 0.4, 0], [0, 0.55, 0.45], [0.45, 0, 0.55], [0.4, 0.35, 0.25]
+];
+var OFFSET_SPLIT = new Map();
+OFFSET_ROWS.forEach(function (row, i) {
+  var total = Math.round((Number(row[17]) - Number(row[18])) * 100) / 100;
+  var sp;
+  if (!isFinite(total) || total <= 0) {
+    sp = [0, 0, 0];
+  } else {
+    var w = OFFSET_SPLIT_W[i % 7];
+    var a = Math.round(total * w[0] * 100) / 100;
+    var b = Math.round(total * w[1] * 100) / 100;
+    sp = [a, b, Math.round((total - a - b) * 100) / 100];
+  }
+  OFFSET_SPLIT.set(row, sp);
+});
+
 function offsetCell(col, row) {
   var v = row[col.i];
-  /* 抵减金额(CNY) = 逾期金额(CNY) - 抵减后金额(CNY)，随数据自动计算 */
-  if (col.k === 'offsetAmt') return fmtNum(Number(row[17]) - Number(row[18]));
+  /* 三个抵减来源分量，和恒等于 逾期金额(CNY) - 抵减后金额(CNY) */
+  if (col.k === 'negOffset' || col.k === 'fundOffset' || col.k === 'graceOffset') {
+    var sp = OFFSET_SPLIT.get(row) || [0, 0, 0];
+    return fmtNum(col.k === 'negOffset' ? sp[0] : col.k === 'fundOffset' ? sp[1] : sp[2]);
+  }
   if (col.num) return fmtNum(v, col.dec);
   return fmtText(v);
 }
