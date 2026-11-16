@@ -259,6 +259,31 @@
   .amount.zero, .zero { color: var(--text-secondary); }
   .cell-empty { color: #C0C4CC; }
 
+  /* ===== 宽限期申请单（静态表格） ===== */
+  .gpa-doc { border: 1px solid var(--border-light); background: #fff; font-size: 12px; }
+  .gpa-title { padding: 12px; text-align: center; border-bottom: 1px solid var(--border-light); background: #FAFAFA; }
+  .gpa-title .cn { font-size: 17px; font-weight: 700; color: var(--text-main); }
+  .gpa-title .en { margin-top: 6px; font-size: 15px; font-weight: 700; color: var(--text-main); }
+  .gpa-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  .gpa-table th, .gpa-table td {
+    border: 1px solid var(--border-light); padding: 7px 10px;
+    color: var(--text-regular); line-height: 1.5; vertical-align: middle;
+    white-space: normal; word-break: break-word;
+  }
+  .gpa-table .lbl { background: #F5F7FA; color: var(--text-main); text-align: right; }
+  .gpa-table .val { text-align: left; }
+  .gpa-table .en { color: var(--text-secondary); font-size: 11px; }
+  .gpa-sec {
+    padding: 8px 10px; text-align: center; background: #F5F7FA;
+    color: var(--text-main); font-weight: 600; font-size: 13px;
+    border-top: 1px solid var(--border-light); border-bottom: 1px solid var(--border-light);
+  }
+  .gpa-sec .en { display: block; font-weight: 400; color: var(--text-secondary); }
+  .gpa-table .ctr { text-align: center; }
+  .gpa-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .gpa-table thead th { background: #F5F7FA; color: var(--text-main); text-align: center; font-weight: 600; }
+  .gpa-table tbody tr:last-child td { border-bottom: 1px solid var(--border-light); }
+
   /* 复选框 */
   .el-checkbox {
     width: 14px; height: 14px;
@@ -482,6 +507,11 @@
       <li class="menu-item" data-view="process" title="逾期账单抵减过程">
         <div class="mi-row" onclick="switchView('process')">
           <i class="mi-icon">🔁</i><span class="mi-text">逾期账单抵减过程</span>
+        </div>
+      </li>
+      <li class="menu-item" data-view="grace" title="宽限期申请">
+        <div class="mi-row" onclick="switchView('grace')">
+          <i class="mi-icon">📝</i><span class="mi-text">宽限期申请</span>
         </div>
       </li>
     </ul>
@@ -909,6 +939,116 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 视图五：宽限期申请（静态 HTML 表格） ===== -->
+  <div class="view" id="view-grace">
+    <div class="card">
+      <div class="card-body">
+        <div class="gpa-doc">
+          <div class="gpa-title">
+            <div class="cn">逾期账户限制宽限申请</div>
+            <div class="en">Grace Period Application For Overdue Accounts</div>
+          </div>
+
+          <table class="gpa-table">
+            <colgroup>
+              <col style="width:17%;"><col style="width:33%;">
+              <col style="width:17%;"><col style="width:33%;">
+            </colgroup>
+            <tbody>
+              <tr>
+                <td class="lbl">申请人 <span class="en">Applicant</span></td><td class="val">胡惠敏</td>
+                <td class="lbl">申请日期 <span class="en">Application Date</span></td><td class="val">2026-01-28</td>
+              </tr>
+              <tr>
+                <td class="lbl">销售代表 <span class="en">Sale Execution</span></td><td class="val">胡锋</td>
+                <td class="lbl">销售部门 <span class="en">Applicant Department</span></td><td class="val">默认销售区域</td>
+              </tr>
+              <tr>
+                <td class="lbl">申请编号 <span class="en">Application ID</span></td><td class="val">ZJ-TJ-LC-20260128520</td>
+                <td class="lbl">签约业务 <span class="en">Contract Service</span></td><td class="val">海外仓储</td>
+              </tr>
+              <tr>
+                <td class="lbl">账户编号 <span class="en">Account ID</span></td><td class="val">ACEL281601</td>
+                <td class="lbl">客户代码 <span class="en">Client Code</span></td><td class="val">EL2816</td>
+              </tr>
+              <tr>
+                <td class="lbl">客户体量（CNY）<br><span class="en">Monthly SalesVolume</span></td><td class="val">0.00 W</td>
+                <td class="lbl">付款周期（天） <span class="en">Payment Period</span></td><td class="val">0</td>
+              </tr>
+              <tr>
+                <td class="lbl">宽限起始日期 <span class="en">Start Date</span></td><td class="val">2026-01-28</td>
+                <td class="lbl">宽限截止日期 <span class="en">Ending Date</span></td><td class="val">2026-01-28</td>
+              </tr>
+              <tr>
+                <td class="lbl">宽限金额（CNY）<br><span class="en">Billing Amount</span></td><td class="val">15000.00</td>
+                <td class="lbl">附件 <span class="en">Attachment</span></td><td class="val"></td>
+              </tr>
+              <tr>
+                <td class="lbl">申请原因 <span class="en">Reason For Application</span></td>
+                <td class="val" colspan="3">ACEL281601 未逾期发起白名单</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="gpa-sec">客户应收明细<span class="en">OverdueDetails / 单位:元</span></div>
+          <div class="table-wrap">
+            <table class="gpa-table">
+              <thead>
+                <tr>
+                  <th style="width:44px;">序号</th>
+                  <th>临时宽限金额<br><span class="en">Temp Grace Period Amount</span></th>
+                  <th>剩余宽限金额<br><span class="en">Applied Temp. Grace Period Amount Balance</span></th>
+                  <th>临时宽限期起始时间<br><span class="en">Start Time</span></th>
+                  <th>临时宽限期截止时间<br><span class="en">End Time</span></th>
+                  <th>应收账款<br><span class="en">Total Receivables</span></th>
+                  <th>未逾期合计<br><span class="en">Current Amount</span></th>
+                  <th>逾期合计CNY<br><span class="en">Amount Due</span></th>
+                  <th>1-30</th>
+                  <th>31-60</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="ctr">1</td><td class="num">0.00</td><td class="num">0.00</td>
+                  <td class="ctr">--</td><td class="ctr">--</td>
+                  <td class="num">1,096.99</td><td class="num">1,096.99</td><td class="num">0.00</td>
+                  <td class="num">0.00</td><td class="num">0.00</td>
+                </tr>
+                <tr>
+                  <td class="ctr" colspan="7">合计</td><td class="num">0.00</td>
+                  <td class="num">0.00</td><td class="num">0.00</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="gpa-sec">客户逾期反馈<span class="en">Overdue Reason</span></div>
+          <table class="gpa-table">
+            <colgroup>
+              <col style="width:44px;"><col style="width:16%;"><col style="width:16%;">
+              <col style="width:18%;"><col style="width:28%;"><col style="width:18%;">
+            </colgroup>
+            <thead>
+              <tr>
+                <th>序号</th>
+                <th>逾期类型<br><span class="en">Overdue Reason</span></th>
+                <th>客户状态<br><span class="en">Account Status</span></th>
+                <th>应收账款状态<br><span class="en">Receivable Status</span></th>
+                <th>逾期原因描述<br><span class="en">Overdue Reason Details</span></th>
+                <th>预计回款时间<br><span class="en">Estimated Payment Time</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="6" style="height:24px;"></td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -2243,7 +2383,7 @@ function onDocFilters() {
   return res;
 }
 
-var VIEW_NAMES = { aging: '客户逾期账龄表', offsetnew: '逾期账单抵减明细', process: '逾期账单抵减过程' };
+var VIEW_NAMES = { aging: '客户逾期账龄表', offsetnew: '逾期账单抵减明细', process: '逾期账单抵减过程', grace: '宽限期申请' };
 var cur = PAGES.aging;
 
 function switchView(key) {
