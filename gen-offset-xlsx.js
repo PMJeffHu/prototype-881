@@ -132,9 +132,9 @@ var evRows = events.map(function (e) {
 });
 buildSheet(wb, '抵减过程明细', [
   { h: '步骤', w: 8, center: true }, { h: '抵减类型', w: 12, center: true },
-  { h: '来源单据编号', w: 18 }, { h: '目标账单编号', w: 18 },
-  { h: '本次抵减金额(CNY)', w: 18, fmt: MONEY }, { h: '来源剩余(CNY)', w: 14, fmt: MONEY },
-  { h: '账单剩余(CNY)', w: 14, fmt: MONEY }
+  { h: '抵减单据编号', w: 18 }, { h: '被抵减单据编号', w: 18 },
+  { h: '本次抵减金额(CNY)', w: 18, fmt: MONEY }, { h: '抵减单据剩余(CNY)', w: 16, fmt: MONEY },
+  { h: '被抵减单据剩余(CNY)', w: 16, fmt: MONEY }
 ], evRows, '合计', [5]);
 
 /* ---------- Sheet 6：抵减结果汇总（公式引用各明细表合计行） ---------- */

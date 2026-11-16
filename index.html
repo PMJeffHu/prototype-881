@@ -723,15 +723,15 @@
               </div>
 
               <div class="fi">
-                <label>来源单据:</label>
+                <label>抵减单据:</label>
                 <div class="fi-controls">
-                  <input type="text" class="el-input" id="pEvSrc" placeholder="请输入来源单据编号">
+                  <input type="text" class="el-input" id="pEvSrc" placeholder="请输入抵减单据编号">
                 </div>
               </div>
               <div class="fi">
-                <label>目标账单:</label>
+                <label>被抵减单据:</label>
                 <div class="fi-controls">
-                  <input type="text" class="el-input" id="pEvTarget" placeholder="请输入目标账单编号">
+                  <input type="text" class="el-input" id="pEvTarget" placeholder="请输入被抵减单据编号">
                 </div>
               </div>
             </div>
@@ -963,11 +963,11 @@
           <tr>
             <th style="width:64px;">序号</th>
             <th style="width:110px;">抵减类型</th>
-            <th>来源单据</th>
-            <th>目标账单</th>
+            <th>抵减单据</th>
+            <th>被抵减单据</th>
             <th class="num">本次抵减金额(CNY)</th>
-            <th class="num">来源剩余(CNY)</th>
-            <th class="num">账单剩余(CNY)</th>
+            <th class="num">抵减单据剩余(CNY)</th>
+            <th class="num">被抵减单据剩余(CNY)</th>
           </tr>
         </thead>
         <tbody id="procDialogBody"></tbody>
@@ -1616,8 +1616,8 @@ var PROC_EVENT_COLS = [
   { k:'srcNo',      label:'抵减单据编号',      w:170 },
   { k:'targetNo',   label:'被抵减单据编号',    w:170 },
   { k:'amt',        label:'本次抵减金额(CNY)',  num:true, w:160 },
-  { k:'srcRemain',  label:'来源剩余(CNY)',      num:true, w:140 },
-  { k:'targetRemain', label:'账单剩余(CNY)',    num:true, w:140 },
+  { k:'srcRemain',  label:'抵减单据剩余(CNY)',  num:true, w:150 },
+  { k:'targetRemain', label:'被抵减单据剩余(CNY)', num:true, w:160 },
   { k:'batchNo',    label:'批次',               w:150 },
   { k:'updateTime', label:'更新时间',           w:140 }
 ];
@@ -1632,7 +1632,7 @@ function procEventCell(col, e) {
   return fmtText(e[col.k]);
 }
 
-/* 流水表筛选：抵减类型 + 来源单据 + 目标账单 */
+/* 流水表筛选：抵减类型 + 抵减单据 + 被抵减单据 */
 function procEventFilters() {
   var res = PROC_RESULT.events.slice();
   var t = gv('pEvType');
@@ -1713,8 +1713,8 @@ var PAGES = {
     sumTitle: '抵减金额合计（按单据类型）',
     sumData: PROC_SUM,
     opHtml: function (e) {
-      return '<a class="op-link" onclick="openProcDetail(\'' + e.srcNo + '\')">来源明细</a>'
-        + '<a class="op-link" onclick="openProcDetail(\'' + e.targetNo + '\')">目标明细</a>';
+      return '<a class="op-link" onclick="openProcDetail(\'' + e.srcNo + '\')">抵减单据明细</a>'
+        + '<a class="op-link" onclick="openProcDetail(\'' + e.targetNo + '\')">被抵减单据明细</a>';
     },
     applyFilters: function () { this.filtered = procEventFilters(); }
   }),
