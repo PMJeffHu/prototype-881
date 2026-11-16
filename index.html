@@ -257,7 +257,6 @@
   .el-table tbody tr:hover td { background: #F5F7FA; }
   .amount { color: var(--primary); }
   .amount.zero, .zero { color: var(--text-secondary); }
-  .num-black { color: #000; }
   .cell-empty { color: #C0C4CC; }
 
   /* 复选框 */
@@ -1458,10 +1457,10 @@ function agingCell(col, row) {
       + fmtNum(v) + '</a>';
   }
   if (col.k === 'tempGrace' || col.k === 'recvTotal' || col.k === 'ovTotal') {
-    if (v === '' || v === null || v === undefined) return '<span class="num-black">--</span>';
+    if (v === '' || v === null || v === undefined) return '<span class="cell-empty">--</span>';
     var bn = Number(v);
     var bs = bn.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    return '<span class="num-black">' + (bn < 0 ? '-' + bs.replace('-', '') : bs) + '</span>';
+    return bn < 0 ? '-' + bs.replace('-', '') : bs;
   }
   if (col.num) return fmtNum(v);
   return fmtText(v);
