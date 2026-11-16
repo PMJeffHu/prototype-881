@@ -400,14 +400,16 @@
   .sd-table tbody tr { transition: background .15s; }
   .sd-table tbody tr:hover td { background: #F5F7FA; }
   .sd-table tr.sd-sum td { background: #F0F1F9; font-weight: 600; color: var(--text-main); }
-  #ageDialog .sd-table, #rcDialog .sd-table { border: 1px solid var(--border-light); }
+  #ageDialog .sd-table, #rcDialog .sd-table, #grDialog .sd-table { border: 1px solid var(--border-light); }
   #ageDialog .sd-table th, #ageDialog .sd-table td,
-  #rcDialog .sd-table th, #rcDialog .sd-table td {
+  #rcDialog .sd-table th, #rcDialog .sd-table td,
+  #grDialog .sd-table th, #grDialog .sd-table td {
     border: 1px solid var(--border-light);
     padding: 9px 12px;
   }
   #ageDialog .sd-table tbody tr:last-child td,
-  #rcDialog .sd-table tbody tr:last-child td { border-bottom: 1px solid var(--border-light); }
+  #rcDialog .sd-table tbody tr:last-child td,
+  #grDialog .sd-table tbody tr:last-child td { border-bottom: 1px solid var(--border-light); }
   .sd-footer { display: flex; justify-content: center; padding: 14px 0 18px; }
 
   /* ===== 分页 ===== */
@@ -1091,6 +1093,57 @@
   </div>
 </div>
 
+<!-- ===== 剩余宽限金额明细弹窗（账龄表剩余宽限金额值点击联动） ===== -->
+<div class="sum-dialog-mask" id="grDialog">
+  <div class="sum-dialog" style="width:1080px;">
+    <div class="sd-header">
+      <span class="sd-title" id="grDialogTitle">剩余宽限金额明细</span>
+      <button class="sd-close" onclick="closeGrDialog()">✕</button>
+    </div>
+    <div class="sd-body">
+      <div class="age-sec-label">宽限单信息</div>
+      <table class="sd-table">
+        <thead>
+          <tr>
+            <th>申请单号</th>
+            <th>白名单类型</th>
+            <th style="width:140px;">起始时间</th>
+            <th style="width:140px;">截止时间</th>
+            <th class="num">宽限金额(CNY)</th>
+          </tr>
+        </thead>
+        <tbody id="grBillBody"></tbody>
+      </table>
+
+      <div class="age-sec-label">抵减信息</div>
+      <table class="sd-table">
+        <thead>
+          <tr>
+            <th style="width:130px;">抵减类型</th>
+            <th>抵减单据</th>
+            <th>被抵减单据</th>
+            <th class="num">本次抵减金额(CNY)</th>
+          </tr>
+        </thead>
+        <tbody id="grOffsetBody"></tbody>
+      </table>
+
+      <div class="age-sec-label">抵减后合计信息</div>
+      <table class="sd-table">
+        <thead>
+          <tr>
+            <th class="num">抵减后合计</th>
+          </tr>
+        </thead>
+        <tbody id="grTotalBody"></tbody>
+      </table>
+    </div>
+    <div class="sd-footer">
+      <button class="btn btn-primary" onclick="closeGrDialog()">返 回</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ===== 侧边栏折叠 ===== */
 var sider = document.getElementById('sider');
@@ -1311,13 +1364,13 @@ var AGING_DEFAULT = ['acctCode','custCode','mainCode','currency','tempGrace','re
   'recvTotal','notOvTotal','ovTotal','d30','d60','d90','d180','d360','ov360','pending','status'];
 var T1 = '2026/11/9 14:11', T2 = '2026/3/10 10:40', T3 = '2025/7/4 15:30';
 var AGING_ROWS = [
-  ['ACG15291721','审核通过','未停用','HOKIE','ETARGET LIMITED','1','海外仓储|','账期管控','1','美洲销售组','张三','李四','王五','G1529','G1529','','正式客户','--',0,0,'CNY',0,0,'','',-3224612.21,0,-3224612.21,-3224612.21,0,0,0,0,0,642501,'成功','',T1,'系统','同步成功',T1,''],
-  ['ACG562118','审核通过','未停用','Grupo Bimbo','CIRRO FULFILLMENT MEXICO','','海外仓储|','额度管控','0','战略客户部','张三','李四','王五','G562','G562','','正式客户','--',0,0,'CNY',0,0,'','',0,0,0,0,0,0,0,0,0,536649.72,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG15291721','审核通过','未停用','HOKIE','ETARGET LIMITED','1','海外仓储|','账期管控','1','美洲销售组','张三','李四','王五','G1529','G1529','白名单','正式客户','--',0,0,'CNY',1200,800,'2026/01/01','2026/12/31',-3224612.21,0,-3224612.21,-3224612.21,0,0,0,0,0,642501,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG562118','审核通过','未停用','Grupo Bimbo','CIRRO FULFILLMENT MEXICO','','海外仓储|','额度管控','0','战略客户部','张三','李四','王五','G562','G562','白名单','正式客户','--',0,0,'CNY',1600,1000,'2026/03/01','2026/09/30',0,0,0,0,0,0,0,0,0,536649.72,'成功','',T1,'系统','同步成功',T1,''],
   ['ACEL284201','审核通过','未停用','Maixne','US ELOGISTICS SERVICE CORP','','海外仓储|','额度管控','0','美洲销售组','张三','李四','王五','EL2842','EL2842','','内部客户','0',0,0,'CNY',0,0,'','',602608.28,0,602608.28,602608.28,0,0,0,0,0,0,'成功','',T1,'系统','同步成功',T1,''],
   ['ACG56203','停用','停用','中转和海外','ETARGET LIMITED','','海外仓储|','额度管控','0','战略客户部','张三','李四','王五','G562','G562','','正式客户','6.74',0,0,'CNY',0,0,'','',-7.14,0,-7.14,-7.14,0,0,0,0,0,0,'成功','',T1,'系统','同步成功',T1,''],
   ['ACG15291712','审核通过','未停用','y:a li，n Eli；g.n,lo、lo。(kjhf);','US ELOGISTICS SERVICE CORP','1','中转代发|','账期管控','3','美洲销售组','张三','李四','王五','G1529','G1529','','正式客户','14995.21',0,0,'CNY',0,0,'','',344084.89,0,344084.89,37804.24,0,0,306280.65,0,0,0,'成功','',T1,'系统','同步成功',T1,''],
-  ['ACG308702','审核通过','未停用','123456','深圳易可达科技有限公司','','海外仓储|','额度管控','30','测试专用产品业务勿用','张三','李四','王五','G3087','G3087','','正式客户','0',0,0,'CNY',0,0,'','',5989604.29,0,5989604.29,28742.07,29768.57,30795.07,5900298.58,0,0,0,'成功','',T1,'系统','同步成功',T1,''],
-  ['ACG506703','审核通过','未停用','UK HAHAHA  LIMITED','Super Smart Service ltd','','海外仓储|','账期管控','30','华北区','张三','李四','王五','G5067','G5067','','正式客户','0.17',0,0,'CNY',0,0,'','',1713.83,0,1713.83,0,0,0,1713.83,0,0,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG308702','审核通过','未停用','123456','深圳易可达科技有限公司','','海外仓储|','额度管控','30','测试专用产品业务勿用','张三','李四','王五','G3087','G3087','白名单','正式客户','0',0,0,'CNY',900,450,'2026/05/01','2026/11/30',5989604.29,0,5989604.29,28742.07,29768.57,30795.07,5900298.58,0,0,0,'成功','',T1,'系统','同步成功',T1,''],
+  ['ACG506703','审核通过','未停用','UK HAHAHA  LIMITED','Super Smart Service ltd','','海外仓储|','账期管控','30','华北区','张三','李四','王五','G5067','G5067','','正式客户','0.17',0,0,'CNY',600,320,'2026/07/01','2026/10/31',1713.83,0,1713.83,0,0,0,1713.83,0,0,0,'成功','',T1,'系统','同步成功',T1,''],
   ['ACG508805','审核通过','未停用','美国测试公司','US ELOGISTICS SERVICE CORP','','海外仓储|','额度管控','0','华北区','张三','李四','王五','G5088','G5088','','正式客户','0.04',0,0,'CNY',0,0,'','',356.95,0,356.95,0,0,0,356.95,0,0,0,'成功','',T1,'系统','同步成功',T1,''],
   ['ACG501710','停用','停用','R560CA002.INC','ZENDA LOGISTICS CORP.','','海外仓储|','账期管控','0','广佛区','张三','李四','王五','G5017','G5017','','正式客户','47.88',0,0,'CNY',0,0,'','',14340.25,0,14340.25,0,0,0,14340.25,0,0,0,'成功','',T1,'系统','同步成功',T1,''],
   ['ACTYY01','审核通过','未停用','LAUFUN','深圳易可达科技有限公司','','转运业务|','账期管控','10','默认销售区域','张三','李四','王五','TYY','TYY','','正式客户','0',644.14,0,'CNY',0,0,'','',4564726.74,0,4564726.74,0,0,0,4564726.74,0,0,0,'成功','',T1,'系统','同步成功',T1,''],
@@ -1382,6 +1435,10 @@ function agingCell(col, row) {
   }
   if (col.k === 'pending' && Number(v) !== 0) {
     return '<a class="op-link" title="查看待核销充值明细" onclick="openRcDetail(\'' + row[13] + '\',' + Number(v) + ')">'
+      + fmtNum(v) + '</a>';
+  }
+  if (col.k === 'remainGrace' && Number(v) !== 0) {
+    return '<a class="op-link" title="查看剩余宽限明细" onclick="openGrDetail(\'' + row[13] + '\',\'' + row[15] + '\',\'' + row[23] + '\',\'' + row[24] + '\',' + Number(v) + ')">'
       + fmtNum(v) + '</a>';
   }
   if (col.num) return fmtNum(v);
@@ -2011,6 +2068,99 @@ function closeRcDialog() { rcDialog.classList.remove('open'); }
 
 rcDialog.addEventListener('click', function (e) {
   if (e.target === this) closeRcDialog();
+});
+
+/* ===== 剩余宽限金额弹窗：按客户代码取宽限单及抵减流水，合计恒等于点击的剩余宽限金额 ===== */
+var grDialog = document.getElementById('grDialog');
+
+function openGrDetail(custCode, whiteType, startDate, endDate, amount) {
+  var afterTotal = Math.round((Number(amount) || 0) * 100) / 100;
+  document.getElementById('grDialogTitle').textContent = '剩余宽限金额明细 - ' + custCode;
+
+  /* 该客户的宽限单 */
+  var gns = {};
+  PROC_RESULT.documents.forEach(function (d) {
+    if (d.type === '宽限单' && String(d.custCode || '').toUpperCase() === String(custCode || '').toUpperCase()) gns[d.no] = true;
+  });
+  var evs = PROC_RESULT.events.filter(function (e) { return gns[e.srcNo]; });
+  var docMap = {};
+  PROC_RESULT.documents.forEach(function (d) { docMap[d.no] = d; });
+
+  var items = [], matched = {}, offsetTotal = 0;
+  evs.forEach(function (e) {
+    if (!gns[e.srcNo]) return;
+    matched[e.srcNo] = true;
+    offsetTotal += e.amt;
+    items.push({ gd: docMap[e.srcNo], ev: e });
+  });
+  Object.keys(gns).forEach(function (no) {
+    if (matched[no]) return;
+    items.push({ gd: docMap[no], ev: null }); /* 未抵减宽限单：本次抵减金额按 0 */
+  });
+  offsetTotal = Math.round(offsetTotal * 100) / 100;
+
+  /* 宽限单带白名单/起止时间，优先取自账龄行（字段随点击传入） */
+  var meta = { whiteType: whiteType || '白名单', startDate: startDate || '--', endDate: endDate || '--' };
+
+  /* 无真实流水时填充测试数据占位 */
+  if (!items.length) {
+    var demoOffset = Math.round(Math.abs(afterTotal) * 0.1 * 100) / 100;
+    var demoA1 = Math.round(demoOffset * 0.6 * 100) / 100;
+    var demoA2 = Math.round((demoOffset - demoA1) * 100) / 100;
+    var demoData = [
+      { no: 'YQBMD-20261116-0101', amt: demoA1, target: 'B' + custCode + '202608100001' },
+      { no: 'YQBMD-20261116-0102', amt: demoA2, target: 'B' + custCode + '202609120002' }
+    ];
+    demoData.forEach(function (d) {
+      items.push({
+        gd: { no: d.no, cny: 0 },
+        ev: { type: '宽限金额抵减', srcNo: d.no, targetNo: d.target, amt: d.amt }
+      });
+    });
+    offsetTotal = demoOffset;
+    document.getElementById('grDialogTitle').textContent += '（测试数据占位）';
+  }
+
+  /* 宽限金额(CNY)按权重分摊，使 宽限金额合计 - 本次抵减合计 = 当前剩余宽限金额 */
+  var beforeTotal = Math.round((afterTotal + offsetTotal) * 100) / 100;
+  var weights = items.map(function (it) { return it.ev ? Math.max(it.ev.amt, 0) : 0; });
+  var wSum = weights.reduce(function (s, w) { return s + w; }, 0);
+  var allocated = 0;
+  items.forEach(function (it, i) {
+    it.cny = i === items.length - 1
+      ? Math.round((beforeTotal - allocated) * 100) / 100
+      : Math.round(beforeTotal * (wSum ? weights[i] / wSum : 1 / items.length) * 100) / 100;
+    allocated = Math.round((allocated + it.cny) * 100) / 100;
+  });
+
+  var billRows = '', offsetRows = '';
+  items.forEach(function (it) {
+    billRows += '<tr>'
+      + '<td>' + it.gd.no + '</td>'
+      + '<td>' + meta.whiteType + '</td>'
+      + '<td>' + meta.startDate + '</td>'
+      + '<td>' + meta.endDate + '</td>'
+      + '<td class="num">' + fmtNum(it.cny) + '</td>'
+      + '</tr>';
+    offsetRows += '<tr>'
+      + '<td>' + (it.ev ? tag(it.ev.type, 'violet') : '--') + '</td>'
+      + '<td>' + (it.ev ? it.ev.srcNo : '--') + '</td>'
+      + '<td>' + (it.ev ? it.ev.targetNo : '--') + '</td>'
+      + '<td class="num">' + fmtNum(it.ev ? it.ev.amt : 0) + '</td>'
+      + '</tr>';
+  });
+  document.getElementById('grBillBody').innerHTML = billRows;
+  document.getElementById('grOffsetBody').innerHTML = offsetRows;
+  document.getElementById('grTotalBody').innerHTML = '<tr class="sd-sum">'
+    + '<td class="num">' + fmtNum(afterTotal) + '</td>'
+    + '</tr>';
+  grDialog.classList.add('open');
+}
+
+function closeGrDialog() { grDialog.classList.remove('open'); }
+
+grDialog.addEventListener('click', function (e) {
+  if (e.target === this) closeGrDialog();
 });
 
 /* ======================================================
