@@ -1546,6 +1546,14 @@ PROC_RESULT.documents.forEach(function (d, i) {
   d.ageRange = procAgeRange(d);
 });
 
+/* 抵减过程记录：批次/更新时间取来源单据的批次与时间 */
+PROC_RESULT.events.forEach(function (e) {
+  var src = null;
+  PROC_RESULT.documents.forEach(function (d) { if (d.no === e.srcNo) src = d; });
+  e.batchNo = src ? src.batchNo : '';
+  e.updateTime = src ? src.updateTime : '';
+});
+
 /* 视图四专用列：单据列表 10 列 + 客户信息 7 列（PAGES.offsetnew 使用，须定义于 PAGES 之前） */
 var ON_COLS = [
   { k:'docType',   label:'单据类型',         w:110 },
@@ -1601,9 +1609,11 @@ var PROC_EVENT_COLS = [
   { k:'targetNo',   label:'目标账单编号',       w:170 },
   { k:'amt',        label:'本次抵减金额(CNY)',  num:true, w:160 },
   { k:'srcRemain',  label:'来源剩余(CNY)',      num:true, w:140 },
-  { k:'targetRemain', label:'账单剩余(CNY)',    num:true, w:140 }
+  { k:'targetRemain', label:'账单剩余(CNY)',    num:true, w:140 },
+  { k:'batchNo',    label:'批次',               w:150 },
+  { k:'updateTime', label:'更新时间',           w:140 }
 ];
-var PROC_EVENT_DEFAULT = ['step','evType','srcNo','targetNo','amt','srcRemain','targetRemain'];
+var PROC_EVENT_DEFAULT = ['step','evType','srcNo','targetNo','amt','srcRemain','targetRemain','batchNo','updateTime'];
 
 function procEventCell(col, e) {
   if (col.k === 'evType') {
