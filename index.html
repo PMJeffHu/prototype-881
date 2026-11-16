@@ -976,7 +976,7 @@
 
 <!-- ===== 账龄区间抵减明细弹窗（账龄表区间值点击联动，样式同上） ===== -->
 <div class="sum-dialog-mask" id="ageDialog">
-  <div class="sum-dialog" style="width:820px;">
+  <div class="sum-dialog" style="width:1320px;">
     <div class="sd-header">
       <span class="sd-title" id="ageDialogTitle">账龄区间抵减明细</span>
       <button class="sd-close" onclick="closeAgeDialog()">✕</button>
@@ -985,7 +985,12 @@
       <table class="sd-table">
         <thead>
           <tr>
-            <th style="width:64px;">序号</th>
+            <th>账单号</th>
+            <th style="width:150px;">账单周期</th>
+            <th style="width:80px;">逾期天数</th>
+            <th class="num">逾期金额(原币)</th>
+            <th class="num" style="width:90px;">记账汇率</th>
+            <th class="num">逾期金额(CNY)</th>
             <th style="width:110px;">抵减类型</th>
             <th>抵减单据</th>
             <th>被抵减单据</th>
@@ -997,9 +1002,13 @@
         <tbody id="ageDialogBody"></tbody>
         <tfoot>
           <tr class="sd-sum">
-            <td colspan="4">被抵减金额合计</td>
-            <td class="num" id="ageDialogTotal">--</td>
-            <td colspan="2"></td>
+            <td colspan="5">逾期金额(CNY)合计</td>
+            <td class="num" id="ageCnyTotal">--</td>
+            <td colspan="6"></td>
+          </tr>
+          <tr class="sd-sum">
+            <td colspan="11">被抵减单据剩余(CNY)合计</td>
+            <td class="num" id="ageTargetRemainTotal">--</td>
           </tr>
         </tfoot>
       </table>
@@ -1578,6 +1587,8 @@ PROC_RESULT.documents.forEach(function (d, i) {
   var t = 9 * 60 + 37 + i * 7;
   d.updateTime = '2026/11/16 ' + ('0' + Math.floor(t / 60)).slice(-2) + ':' + ('0' + (t % 60)).slice(-2);
   d.ageRange = procAgeRange(d);
+  d.billCycle = ['2026-08-01至2026-08-31', '2026-09-01至2026-09-30',
+    '2026-10-01至2026-10-31', '2026-11-01至2026-11-15'][i % 4];
 });
 
 /* 抵减过程记录：批次以正数账单为单位——同一目标账单的全部抵减事件（负数账单/充值单/宽限单）
@@ -1747,12 +1758,25 @@ function openAgeDetail(custCode, key) {
   });
   var evs = PROC_RESULT.events.filter(function (e) { return nums[e.srcNo] || nums[e.targetNo]; });
   document.getElementById('ageDialogTitle').textContent = '账龄区间抵减明细 - ' + custCode + ' - ' + label;
-  var body;
+  var docMap = {};
+  PROC_RESULT.documents.forEach(function (d) { docMap[d.no] = d; });
+  var body, cnyTotal = 0, remainTotal = 0;
   if (evs.length) {
-    body = evs.map(function (e, i) {
+    body = evs.map(function (e) {
+      /* 账单信息取该区间被抵减的正/负数账单：优先目标账单，其次来源账单 */
+      var bill = docMap[e.targetNo] && nums[e.targetNo] ? docMap[e.targetNo]
+        : docMap[e.srcNo] && nums[e.srcNo] ? docMap[e.srcNo] : null;
+      if (!bill) return '';
       var tc = e.type === '负数账单抵减' ? 'warning' : e.type === '充值单抵减' ? 'success' : 'violet';
+      cnyTotal += bill.cny;
+      remainTotal += e.targetRemain;
       return '<tr>'
-        + '<td>' + (i + 1) + '</td>'
+        + '<td>' + bill.no + '</td>'
+        + '<td>' + bill.billCycle + '</td>'
+        + '<td>' + bill.days + '</td>'
+        + '<td class="num">' + fmtNum(bill.amtO) + '</td>'
+        + '<td class="num">' + (bill.rate === null ? '--' : fmtNum(bill.rate, 4)) + '</td>'
+        + '<td class="num">' + fmtNum(bill.cny) + '</td>'
         + '<td>' + tag(e.type, tc) + '</td>'
         + '<td>' + e.srcNo + '</td>'
         + '<td>' + e.targetNo + '</td>'
@@ -1761,11 +1785,12 @@ function openAgeDetail(custCode, key) {
         + '<td class="num">' + fmtNum(e.targetRemain) + '</td>'
         + '</tr>';
     }).join('');
-    var total = Math.round(evs.reduce(function (s, e) { return s + e.amt; }, 0) * 100) / 100;
-    document.getElementById('ageDialogTotal').textContent = total.toLocaleString('zh-CN', { minimumFractionDigits: 2 });
+    document.getElementById('ageCnyTotal').textContent = (Math.round(cnyTotal * 100) / 100).toLocaleString('zh-CN', { minimumFractionDigits: 2 });
+    document.getElementById('ageTargetRemainTotal').textContent = (Math.round(remainTotal * 100) / 100).toLocaleString('zh-CN', { minimumFractionDigits: 2 });
   } else {
-    body = '<tr><td colspan="7" style="text-align:center;padding:36px 0;color:#909399;">该客户在该账龄区间暂无抵减明细</td></tr>';
-    document.getElementById('ageDialogTotal').textContent = '--';
+    body = '<tr><td colspan="12" style="text-align:center;padding:36px 0;color:#909399;">该客户在该账龄区间暂无抵减明细</td></tr>';
+    document.getElementById('ageCnyTotal').textContent = '--';
+    document.getElementById('ageTargetRemainTotal').textContent = '--';
   }
   document.getElementById('ageDialogBody').innerHTML = body;
   ageDialog.classList.add('open');
