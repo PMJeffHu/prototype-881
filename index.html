@@ -384,8 +384,9 @@
   }
   .sd-table th.num { text-align: right; }
   .age-sec-label {
-    margin: 12px 0 6px; padding: 7px 12px; background: #E9EBF8;
-    color: var(--text-main); font-weight: 600; font-size: 13px; border-left: 3px solid var(--primary);
+    margin: 14px 0 8px; padding: 0 0 0 9px; background: transparent;
+    color: var(--text-main); font-weight: 600; font-size: 14px;
+    line-height: 18px; border-left: 3px solid var(--primary);
   }
   .sd-table td {
     padding: 10px 12px;
@@ -399,6 +400,13 @@
   .sd-table tbody tr { transition: background .15s; }
   .sd-table tbody tr:hover td { background: #F5F7FA; }
   .sd-table tr.sd-sum td { background: #F0F1F9; font-weight: 600; color: var(--text-main); }
+  #ageDialog .sd-table { border: 1px solid var(--border-light); }
+  #ageDialog .sd-table th,
+  #ageDialog .sd-table td {
+    border: 1px solid var(--border-light);
+    padding: 9px 12px;
+  }
+  #ageDialog .sd-table tbody tr:last-child td { border-bottom: 1px solid var(--border-light); }
   .sd-footer { display: flex; justify-content: center; padding: 14px 0 18px; }
 
   /* ===== 分页 ===== */
@@ -1787,6 +1795,28 @@ function openAgeDetail(custCode, key, amount) {
   });
   offsetTotal = Math.round(offsetTotal * 100) / 100;
 
+  /* 无真实流水时填充测试数据占位，保证三张表均有内容且合计恒等式成立 */
+  if (!items.length) {
+    var demoDays = range[1] === Infinity ? 400 : Math.floor((range[0] + range[1]) / 2);
+    var demoOffset = Math.round(Math.abs(afterTotal) * 0.1 * 100) / 100;
+    var demoA1 = Math.round(demoOffset * 0.6 * 100) / 100;
+    var demoA2 = Math.round((demoOffset - demoA1) * 100) / 100;
+    var demoData = [
+      { bill: 'B' + custCode + '202609010001', cycle: '2026-09-01至2026-09-30',
+        type: '负数账单抵减', src: 'B' + custCode + '202608150005', amt: demoA1 },
+      { bill: 'B' + custCode + '202610010001', cycle: '2026-10-01至2026-10-31',
+        type: '充值单抵减', src: 'RN202611160001', amt: demoA2 }
+    ];
+    demoData.forEach(function (d) {
+      items.push({
+        bill: { no: d.bill, billCycle: d.cycle, days: demoDays, rate: 1, cny: 0 },
+        ev: { type: d.type, srcNo: d.src, targetNo: d.bill, amt: d.amt }
+      });
+    });
+    offsetTotal = demoOffset;
+    document.getElementById('ageDialogTitle').textContent += '（测试数据占位）';
+  }
+
   /* 逾期金额(CNY)按权重分摊，使 逾期金额合计 - 本次抵减合计 = 当前账龄区间金额 */
   var beforeTotal = Math.round((afterTotal + offsetTotal) * 100) / 100;
   var weights = items.map(function (it) { return it.ev ? Math.max(it.ev.amt, 0) : Math.max(it.bill.cny, 0); });
@@ -1819,12 +1849,6 @@ function openAgeDetail(custCode, key, amount) {
       + '<td class="num">' + fmtNum(it.ev ? it.ev.amt : 0) + '</td>'
       + '</tr>';
   });
-  if (!items.length) {
-    billRows = '<tr><td colspan="6" style="text-align:center;padding:24px 0;color:#909399;">该客户在该账龄区间暂无账单</td></tr>';
-    offsetRows = '<tr><td colspan="4" style="text-align:center;padding:24px 0;color:#909399;">暂无抵减信息</td></tr>';
-    beforeTotal = afterTotal; /* 无抵减：抵减后逾期合计仍等于当前账龄区间金额 */
-    offsetTotal = 0;
-  }
   document.getElementById('ageBillBody').innerHTML = billRows;
   document.getElementById('ageOffsetBody').innerHTML = offsetRows;
   document.getElementById('ageTotalBody').innerHTML = '<tr class="sd-sum">'
