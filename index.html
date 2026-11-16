@@ -454,6 +454,11 @@
           <i class="mi-icon">🧾</i><span class="mi-text">逾期账单抵减明细</span>
         </div>
       </li>
+      <li class="menu-item" data-view="offsetnew" title="逾期账单抵减明细NEW">
+        <div class="mi-row" onclick="switchView('offsetnew')">
+          <i class="mi-icon">📄</i><span class="mi-text">逾期账单抵减明细NEW</span>
+        </div>
+      </li>
       <li class="menu-item" data-view="process" title="逾期账单抵减过程">
         <div class="mi-row" onclick="switchView('process')">
           <i class="mi-icon">🔁</i><span class="mi-text">逾期账单抵减过程</span>
@@ -1019,6 +1024,115 @@
                 <button class="pg-btn" id="pEvPgNext" onclick="cur.goPage(1)">下一页</button>
                 <div class="pg-jumper">
                   <span>前往</span><input type="number" min="1" id="pEvPgJump" value="1"><span>页</span>
+                  <button class="btn" style="height:26px;padding:0 10px;" onclick="cur.goPage()">GO</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================================================== -->
+      <!-- 视图四：逾期账单抵减明细NEW（单据列表，数据同抵减过程-单据列表） -->
+      <!-- ================================================== -->
+      <div class="view" id="view-offsetnew">
+
+        <!-- 筛选区 -->
+        <div class="card">
+          <div class="card-body">
+
+            <div class="seg-row">
+              <span class="seg-label">单据类型:</span>
+              <div class="seg-group" id="onTypeSeg">
+                <button class="seg-btn active" onclick="segPick(this)">全部</button>
+                <button class="seg-btn" onclick="segPick(this)">正数账单</button>
+                <button class="seg-btn" onclick="segPick(this)">负数账单</button>
+                <button class="seg-btn" onclick="segPick(this)">充值单</button>
+                <button class="seg-btn" onclick="segPick(this)">宽限单</button>
+              </div>
+            </div>
+            <div class="seg-row">
+              <span class="seg-label">抵减状态:</span>
+              <div class="seg-group" id="onStatusSeg">
+                <button class="seg-btn active" onclick="segPick(this)">全部</button>
+                <button class="seg-btn" onclick="segPick(this)">未抵减</button>
+                <button class="seg-btn" onclick="segPick(this)">部分抵减</button>
+                <button class="seg-btn" onclick="segPick(this)">已抵完</button>
+                <button class="seg-btn" onclick="segPick(this)">不抵减</button>
+              </div>
+            </div>
+
+            <div class="filter-grid">
+              <div class="fi">
+                <label>单据编号:</label>
+                <div class="fi-controls">
+                  <input type="text" class="el-input" id="onDocNo" placeholder="请输入单据编号">
+                </div>
+              </div>
+              <div class="fi">
+                <label>币种:</label>
+                <div class="fi-controls">
+                  <select class="el-select" id="onDocCur"><option value="">请选择币种</option><option>CNY</option><option>USD</option><option>EUR</option><option>JPY</option><option>HKD</option></select>
+                </div>
+              </div>
+              <div class="fi">
+                <label>逾期天数:</label>
+                <div class="fi-controls">
+                  <div class="range-group">
+                    <input type="text" class="el-input" id="onDayMin" placeholder="最小值">
+                    <span class="range-sep">-</span>
+                    <input type="text" class="el-input" id="onDayMax" placeholder="最大值">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="filter-actions">
+              <button class="btn btn-primary" onclick="cur.doSearch()">查 询</button>
+              <button class="btn" onclick="cur.doReset()">重 置</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 表格区 -->
+        <div class="card">
+          <div class="card-body">
+            <div class="table-toolbar">
+              <div class="toolbar-left">
+                <button class="btn btn-primary" onclick="alert('原型演示：手动执行抵减计算')">手动执行<span class="btn-sup">1</span></button>
+                <button class="btn btn-primary" onclick="alert('原型演示：手动同步')">手动同步<span class="btn-sup">2</span></button>
+                <button class="btn btn-primary" onclick="alert('原型演示：批量重试')">批量重试<span class="btn-sup">3</span></button>
+                <button class="btn btn-primary" onclick="alert('原型演示：导出 Excel')">⬇ 导出</button>
+                <button class="btn btn-primary" onclick="alert('原型演示：一键查看原文')">一键查看原文</button>
+              </div>
+              <div class="sum-box">
+                <button class="btn btn-primary" onclick="openSumDialog()">抵减金额合计</button>
+              </div>
+            </div>
+
+            <!-- 单据列表 -->
+            <div id="onDocsBlock">
+              <div class="table-wrap">
+                <table class="el-table">
+                  <thead id="onHead"></thead>
+                  <tbody id="onBody"></tbody>
+                </table>
+              </div>
+              <div class="pagination">
+                <span id="onPgTotal"></span>
+                <div class="pg-sizes">
+                  <select class="el-select" id="onPgSize" onchange="cur.changeSize(this)">
+                    <option value="10">10条/页</option>
+                    <option value="20">20条/页</option>
+                    <option value="50">50条/页</option>
+                    <option value="100">100条/页</option>
+                  </select>
+                </div>
+                <button class="pg-btn" id="onPgPrev" onclick="cur.goPage(-1)">上一页</button>
+                <span id="onPgPages"></span>
+                <button class="pg-btn" id="onPgNext" onclick="cur.goPage(1)">下一页</button>
+                <div class="pg-jumper">
+                  <span>前往</span><input type="number" min="1" id="onPgJump" value="1"><span>页</span>
                   <button class="btn" style="height:26px;padding:0 10px;" onclick="cur.goPage()">GO</button>
                 </div>
               </div>
@@ -1935,10 +2049,41 @@ var PAGES = {
         + '<a class="op-link" onclick="openProcDetail(\'' + e.targetNo + '\')">目标明细</a>';
     },
     applyFilters: function () { this.filtered = procEventFilters(); }
+  }),
+  offsetnew: createPage({
+    key: 'offsetnew',
+    COLS: PROC_COLS,
+    DEFAULT_VISIBLE: PROC_DEFAULT,
+    rows: PROC_RESULT.documents,
+    el: { head: 'onHead', body: 'onBody', pgTotal: 'onPgTotal', pgPages: 'onPgPages', pgPrev: 'onPgPrev', pgNext: 'onPgNext', pgJump: 'onPgJump' },
+    cellHtml: procCell,
+    sumTitle: '抵减金额合计（按单据类型）',
+    sumData: PROC_SUM,
+    opHtml: function (d) { return '<a class="op-link" onclick="openProcDetail(\'' + d.no + '\')">抵减明细</a>'; },
+    applyFilters: function () { this.filtered = onDocFilters(); }
   })
 };
 
-var VIEW_NAMES = { aging: '客户逾期账龄表', offset: '逾期账单抵减明细', process: '逾期账单抵减过程' };
+/* 视图四（抵减明细NEW）筛选：读取 on* 前缀控件，逻辑同 procDocFilters */
+function onDocFilters() {
+  var res = PROC_RESULT.documents.slice();
+  var typeBtn = document.querySelector('#onTypeSeg .seg-btn.active');
+  var type = typeBtn ? typeBtn.textContent.trim() : '全部';
+  if (type !== '全部') res = res.filter(function (d) { return d.type === type; });
+  var stBtn = document.querySelector('#onStatusSeg .seg-btn.active');
+  var st = stBtn ? stBtn.textContent.trim() : '全部';
+  if (st !== '全部') res = res.filter(function (d) { return d.status === st; });
+  var no = gv('onDocNo');
+  if (no) res = res.filter(function (d) { return d.no.toUpperCase().indexOf(no.toUpperCase()) > -1; });
+  var c = gv('onDocCur');
+  if (c) res = res.filter(function (d) { return d.cur === c; });
+  var dMin = Number(gv('onDayMin')), dMax = Number(gv('onDayMax'));
+  if (gv('onDayMin') !== '') res = res.filter(function (d) { return d.days !== null && d.days >= dMin; });
+  if (gv('onDayMax') !== '') res = res.filter(function (d) { return d.days !== null && d.days <= dMax; });
+  return res;
+}
+
+var VIEW_NAMES = { aging: '客户逾期账龄表', offset: '逾期账单抵减明细', offsetnew: '逾期账单抵减明细NEW', process: '逾期账单抵减过程' };
 var cur = PAGES.aging;
 
 function switchView(key) {
@@ -2059,6 +2204,7 @@ PAGES.aging.render();
 PAGES.offset.render();
 PAGES.process.render();
 PAGES.processEvents.render();
+PAGES.offsetnew.render();
 </script>
 </body>
 </html>
