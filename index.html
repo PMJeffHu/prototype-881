@@ -1498,6 +1498,11 @@ PROC_RESULT.documents.forEach(function (d) {
   d.custStar = c[4]; d.salesArea = c[5]; d.salesRep = c[6];
 });
 
+/* 批次号：DJPC + YYYYMMDD + 6位流水号（按单据顺序递增） */
+PROC_RESULT.documents.forEach(function (d, i) {
+  d.batchNo = 'DJPC20261116' + ('000000' + (i + 1)).slice(-6);
+});
+
 /* 视图四专用列：单据列表 10 列 + 客户信息 7 列（PAGES.offsetnew 使用，须定义于 PAGES 之前） */
 var ON_COLS = [
   { k:'docType',   label:'单据类型',         w:110 },
@@ -1516,10 +1521,11 @@ var ON_COLS = [
   { k:'cny',       label:'抵减前金额(CNY)',  num:true, w:140 },
   { k:'offsetAmt', label:'被抵减金额(CNY)',  num:true, w:150 },
   { k:'remain',    label:'抵减后余额(CNY)',  num:true, w:150 },
-  { k:'status',    label:'抵减状态',         w:110 }
+  { k:'status',    label:'抵减状态',         w:110 },
+  { k:'batchNo',   label:'批次',             w:150 }
 ];
 var ON_DEFAULT = ['docType','docNo','custCode','acctCode','signSubj','servSubj','custStar','salesArea','salesRep',
-  'days','cur','amtO','rate','cny','offsetAmt','remain','status'];
+  'days','cur','amtO','rate','cny','offsetAmt','remain','status','batchNo'];
 
 function procCell(col, d) {
   if (col.k === 'docType') {
