@@ -851,14 +851,8 @@
           <div class="card-body">
             <div class="table-toolbar">
               <div class="toolbar-left">
-                <button class="btn btn-primary" onclick="alert('原型演示：手动执行抵减计算')">手动执行<span class="btn-sup">1</span></button>
-                <button class="btn btn-primary" onclick="alert('原型演示：手动同步')">手动同步<span class="btn-sup">2</span></button>
-                <button class="btn btn-primary" onclick="alert('原型演示：批量重试')">批量重试<span class="btn-sup">3</span></button>
                 <button class="btn btn-primary" onclick="alert('原型演示：导出 Excel')">⬇ 导出</button>
                 <button class="btn btn-primary" onclick="alert('原型演示：一键查看原文')">一键查看原文</button>
-              </div>
-              <div class="sum-box">
-                <button class="btn btn-primary" onclick="openSumDialog()">抵减金额合计</button>
               </div>
             </div>
 
@@ -1653,13 +1647,6 @@ function procEventFilters() {
   return res;
 }
 
-/* 合计弹窗数据：按单据类型汇总被抵减金额（CNY 口径） */
-var PROC_SUM = ['正数账单', '负数账单', '充值单', '宽限单'].map(function (t) {
-  var off = 0;
-  PROC_RESULT.documents.forEach(function (d) { if (d.type === t) off += d.offset; });
-  return [t, Math.round(off * 100) / 100];
-});
-
 /* ===== 抵减明细联动弹窗：展示某单据参与的全部抵减流水 ===== */
 var procDialog = document.getElementById('procDialog');
 
@@ -1729,9 +1716,10 @@ var PAGES = {
     rows: PROC_RESULT.documents,
     el: { head: 'onHead', body: 'onBody', pgTotal: 'onPgTotal', pgPages: 'onPgPages', pgPrev: 'onPgPrev', pgNext: 'onPgNext', pgJump: 'onPgJump' },
     cellHtml: procCell,
-    sumTitle: '抵减金额合计（按单据类型）',
-    sumData: PROC_SUM,
-    opHtml: function (d) { return '<a class="op-link" onclick="openProcDetail(\'' + d.no + '\')">抵减明细</a>'; },
+    opHtml: function (d) {
+      return '<a class="op-link" onclick="openProcDetail(\'' + d.no + '\')">抵减明细</a>'
+        + '<a class="op-link" onclick="rowOp(\'查看原文\', this)">查看原文</a>';
+    },
     applyFilters: function () { this.filtered = onDocFilters(); }
   })
 };
