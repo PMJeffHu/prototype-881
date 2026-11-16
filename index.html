@@ -1499,10 +1499,25 @@ PROC_RESULT.documents.forEach(function (d) {
 });
 
 /* 批次号：DJPC + YYYYMMDD + 6位流水号（按单据顺序递增）；更新时间：日期时间格式，随批次递增 */
+/* 逾期账龄区间：正/负数账单按逾期天数归属账龄表区间；充值单→待核销充值金额；宽限单→剩余宽限金额 */
+function procAgeRange(d) {
+  if (d.type === '充值单') return '待核销充值金额';
+  if (d.type === '宽限单') return '剩余宽限金额';
+  var days = d.days || 0;
+  if (days <= 0) return '未逾期合计';
+  if (days <= 30) return '逾期1-30天';
+  if (days <= 60) return '逾期31-60天';
+  if (days <= 90) return '逾期61-90天';
+  if (days <= 180) return '逾期91-180天';
+  if (days <= 360) return '逾期181-360天';
+  return '逾期360天以上';
+}
+
 PROC_RESULT.documents.forEach(function (d, i) {
   d.batchNo = 'DJPC20261116' + ('000000' + (i + 1)).slice(-6);
   var t = 9 * 60 + 37 + i * 7;
   d.updateTime = '2026/11/16 ' + ('0' + Math.floor(t / 60)).slice(-2) + ':' + ('0' + (t % 60)).slice(-2);
+  d.ageRange = procAgeRange(d);
 });
 
 /* 视图四专用列：单据列表 10 列 + 客户信息 7 列（PAGES.offsetnew 使用，须定义于 PAGES 之前） */
@@ -1523,12 +1538,13 @@ var ON_COLS = [
   { k:'cny',       label:'抵减前金额(CNY)',  num:true, w:140 },
   { k:'offsetAmt', label:'被抵减金额(CNY)',  num:true, w:150 },
   { k:'remain',    label:'抵减后余额(CNY)',  num:true, w:150 },
+  { k:'ageRange',  label:'逾期账龄区间',     w:130 },
   { k:'status',    label:'抵减状态',         w:110 },
   { k:'updateTime',label:'更新时间',         w:140 },
   { k:'batchNo',   label:'批次',             w:150 }
 ];
 var ON_DEFAULT = ['docType','docNo','custCode','acctCode','signSubj','servSubj','custStar','salesArea','salesRep',
-  'days','cur','amtO','rate','cny','offsetAmt','remain','status','updateTime','batchNo'];
+  'days','cur','amtO','rate','cny','offsetAmt','remain','ageRange','status','updateTime','batchNo'];
 
 function procCell(col, d) {
   if (col.k === 'docType') {
