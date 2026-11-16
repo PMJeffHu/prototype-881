@@ -1392,19 +1392,16 @@ var PROC_CUST_INFO = {
    单据编号规则（引擎执行前重写源数据，事件流水自动同步）：
    正/负数账单  B + 客户代码 + YYYYMMDD + 4位流水号
    资金单      RN + YYYYMMDD + 4位流水号
-   宽限单      YQBMD + YYYYMMDDHHmmss + 4位流水号
+   宽限单      YQBMD-YYYYMMDD-4位流水号（如 YQBMD-20261116-0001）
    ====================================================== */
 var PROC_NO_CUST = {}; /* 新单号 → 客户信息 */
-var docSeq = 0;
 var docSeqCnt = { B: 0, RN: 0, YQBMD: 0 };
 function newDocNo(prefix, cust) {
-  var i = docSeq++;
-  var t = 9 * 60 + 37 + i * 7; /* 09:37 起逐单 +7 分钟，与更新时间一致 */
-  var ts = (prefix === 'B' || prefix === 'RN') ? '20261116' : '20261116'
-    + ('0' + Math.floor(t / 60)).slice(-2) + ('0' + (t % 60)).slice(-2)
-    + ('0' + (i * 7) % 60).slice(-2);
   docSeqCnt[prefix]++;
-  return prefix + (prefix === 'RN' ? '' : (cust || '')) + ts + ('0000' + docSeqCnt[prefix]).slice(-4);
+  var seq = ('0000' + docSeqCnt[prefix]).slice(-4);
+  if (prefix === 'YQBMD') return 'YQBMD-20261116-' + seq;
+  if (prefix === 'RN') return 'RN20261116' + seq;
+  return 'B' + (cust || '') + '20261116' + seq;
 }
 PROC_POS.forEach(function (b) { var c = PROC_CUST_INFO[b[0]]; b[0] = newDocNo('B', c[0]); PROC_NO_CUST[b[0]] = c; });
 PROC_NEG.forEach(function (b) { var c = PROC_CUST_INFO[b[0]]; b[0] = newDocNo('B', c[0]); PROC_NO_CUST[b[0]] = c; });
