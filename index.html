@@ -309,6 +309,7 @@
     background: #fff; color: var(--text-regular); font-size: 12px; outline: none;
   }
   .wf-input:focus { border-color: var(--primary); }
+  .wf-multi { height: auto; padding: 3px 6px; line-height: 1.5; }
   .wf-static { color: var(--text-regular); line-height: 26px; }
   .wf-textarea {
     width: 100%; min-height: 52px; padding: 6px 8px;
@@ -1006,6 +1007,27 @@
               <div class="wf-fi"><label>付款周期:</label><div class="wf-static">30</div></div>
               <div class="wf-fi"><label>最近成交时间:</label><div class="wf-static">2022-11-18 14:49:30</div></div>
               <div class="wf-fi"><label>签约业务:</label><div class="wf-static">海外仓储</div></div>
+              <div class="wf-fi"><label>管控方式:</label><div class="wf-static">账期管控</div></div>
+              <div class="wf-fi"><label>出账周期（天）:</label><div class="wf-static">30</div></div>
+              <div class="wf-fi">
+                <label>申请类型:</label>
+                <div class="wf-ctl">
+                  <select class="wf-input wf-multi" multiple size="4">
+                    <option>计费争议未解决</option>
+                    <option>计费争议已解决待回款</option>
+                    <option>赔返流程未完结</option>
+                    <option>未按时回款</option>
+                    <option>资金紧张</option>
+                    <option>付款异常</option>
+                    <option>约定结算账期与系统不一致</option>
+                    <option>其他</option>
+                  </select>
+                </div>
+              </div>
+              <div class="wf-fi">
+                <label>涉及金额:</label>
+                <div class="wf-ctl"><input class="wf-input" inputmode="decimal" maxlength="16" placeholder="请输入金额（最多13位整数，2位小数）" oninput="this.value=this.value.replace(/[^0-9.]/g,'').replace(/(\..*)\./g,'$1').replace(/(\d{13})\d+/, '$1').replace(/(\.\d{2})\d+/, '$1')"></div>
+              </div>
             </div>
             <div class="wf-fi" style="margin-top:14px;">
               <label>附件:</label>
