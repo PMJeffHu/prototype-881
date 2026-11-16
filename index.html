@@ -754,9 +754,6 @@
                 <button class="btn btn-primary" onclick="alert('原型演示：导出 Excel')">⬇ 导出</button>
                 <button class="btn btn-primary" onclick="alert('原型演示：一键查看原文')">一键查看原文</button>
               </div>
-              <div class="sum-box">
-                <button class="btn btn-primary" onclick="openSumDialog()">抵减金额合计</button>
-              </div>
             </div>
 
             <!-- 抵减过程记录 -->
@@ -1725,8 +1722,6 @@ var PAGES = {
     rows: PROC_RESULT.events,
     el: { head: 'pEvHead', body: 'pEvBody', pgTotal: 'pEvPgTotal', pgPages: 'pEvPgPages', pgPrev: 'pEvPgPrev', pgNext: 'pEvPgNext', pgJump: 'pEvPgJump' },
     cellHtml: procEventCell,
-    sumTitle: '抵减金额合计（按单据类型）',
-    sumData: PROC_SUM,
     opHtml: function (e) {
       return '<a class="op-link" onclick="openProcDetail(\'' + e.srcNo + '\')">抵减单据明细</a>'
         + '<a class="op-link" onclick="openProcDetail(\'' + e.targetNo + '\')">被抵减单据明细</a>';
