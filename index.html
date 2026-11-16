@@ -299,7 +299,7 @@
   /* ===== 字段选择弹出层（操作列齿轮） ===== */
   .col-pop {
     position: fixed;
-    width: 250px;
+    width: 300px;
     background: #fff;
     border: 1px solid var(--border-light);
     border-radius: 4px;
@@ -324,6 +324,16 @@
     cursor: pointer; white-space: nowrap; overflow: hidden;
   }
   .col-pop .cp-item:hover { background: #F5F7FA; }
+  .col-pop .cp-item .cp-label { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+  .col-pop .cp-item .cp-order { display: flex; gap: 2px; flex: 0 0 auto; }
+  .col-pop .cp-mv {
+    width: 18px; height: 18px; line-height: 16px; text-align: center;
+    border: 1px solid var(--border-light); border-radius: 2px;
+    color: var(--text-secondary); cursor: pointer; font-size: 12px; user-select: none;
+  }
+  .col-pop .cp-mv:hover { color: var(--primary); border-color: var(--primary); }
+  .col-pop .cp-mv.off { color: #C0C4CC; cursor: not-allowed; border-color: var(--border-light); }
+  .col-pop .cp-tip { padding: 2px 14px 6px; font-size: 11px; color: var(--text-secondary); }
   .col-pop .cp-foot {
     display: flex; justify-content: space-between; align-items: center;
     padding: 8px 14px;
@@ -912,6 +922,7 @@
     <span class="cp-count" id="cpCount"></span>
   </div>
   <div class="cp-list" id="cpList"></div>
+  <div class="cp-tip">↑ ↓ 调整字段展示顺序</div>
   <div class="cp-foot">
     <span>
       <a class="cp-link" onclick="colSelAll()">全选</a>
@@ -1192,6 +1203,7 @@ function createPage(opts) {
     COLS: opts.COLS,
     DEFAULT_VISIBLE: opts.DEFAULT_VISIBLE,
     visibleKeys: opts.DEFAULT_VISIBLE.slice(),
+    colOrder: opts.COLS.map(function (c) { return c.k; }),
     rows: opts.rows,
     filtered: opts.rows.slice(),
     page: 1,
@@ -1205,7 +1217,10 @@ function createPage(opts) {
   };
 
   p.visibleCols = function () {
-    return p.COLS.filter(function (c) { return p.visibleKeys.indexOf(c.k) > -1; });
+    return p.colOrder.map(function (k) {
+      for (var i = 0; i < p.COLS.length; i++) if (p.COLS[i].k === k) return p.COLS[i];
+      return null;
+    }).filter(function (c) { return c && p.visibleKeys.indexOf(c.k) > -1; });
   };
 
   p.render = function () {
@@ -2245,7 +2260,7 @@ function openColPop(ev) {
   if (colPop.classList.contains('open')) { closeColPop(); return; }
   renderColPop();
   var rect = ev.target.getBoundingClientRect();
-  var w = 250;
+  var w = 300;
   var left = Math.min(rect.right - w, window.innerWidth - w - 8);
   var top = rect.bottom + 6;
   if (top + 360 > window.innerHeight) top = Math.max(8, rect.top - 360);
@@ -2257,14 +2272,33 @@ function openColPop(ev) {
 function closeColPop() { colPop.classList.remove('open'); }
 
 function renderColPop() {
-  var list = cur.COLS.map(function (c) {
-    var checked = cur.visibleKeys.indexOf(c.k) > -1 ? ' checked' : '';
-    return '<label class="cp-item" onclick="event.stopPropagation()">'
-      + '<input type="checkbox" class="el-checkbox" data-k="' + c.k + '"' + checked + ' onchange="colToggle(\'' + c.k + '\', this)">'
-      + '<span>' + c.label + '</span></label>';
+  var colMap = {};
+  cur.COLS.forEach(function (c) { colMap[c.k] = c; });
+  var list = cur.colOrder.map(function (k, i) {
+    var c = colMap[k];
+    if (!c) return '';
+    var checked = cur.visibleKeys.indexOf(k) > -1 ? ' checked' : '';
+    var up = i === 0 ? ' off' : '';
+    var down = i === cur.colOrder.length - 1 ? ' off' : '';
+    return '<div class="cp-item" onclick="event.stopPropagation()">'
+      + '<label class="cp-label"><input type="checkbox" class="el-checkbox" data-k="' + k + '"' + checked
+      + ' onchange="colToggle(\'' + k + '\', this)"><span>' + c.label + '</span></label>'
+      + '<span class="cp-order">'
+      + '<a class="cp-mv' + up + '" title="上移" onclick="colMove(\'' + k + '\',-1)">↑</a>'
+      + '<a class="cp-mv' + down + '" title="下移" onclick="colMove(\'' + k + '\',1)">↓</a>'
+      + '</span></div>';
   }).join('');
   document.getElementById('cpList').innerHTML = list;
   document.getElementById('cpCount').textContent = cur.visibleKeys.length + '/' + cur.COLS.length;
+}
+
+function colMove(k, dir) {
+  var idx = cur.colOrder.indexOf(k);
+  var to = idx + dir;
+  if (idx < 0 || to < 0 || to >= cur.colOrder.length) return;
+  var tmp = cur.colOrder[idx]; cur.colOrder[idx] = cur.colOrder[to]; cur.colOrder[to] = tmp;
+  renderColPop();
+  cur.render();
 }
 
 function colToggle(k, cb) {
@@ -2283,6 +2317,7 @@ function colSelAll() {
 
 function colReset() {
   cur.visibleKeys = cur.DEFAULT_VISIBLE.slice();
+  cur.colOrder = cur.COLS.map(function (c) { return c.k; });
   renderColPop();
   cur.render();
 }
