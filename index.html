@@ -383,6 +383,10 @@
     white-space: nowrap;
   }
   .sd-table th.num { text-align: right; }
+  .age-sec-label {
+    margin: 12px 0 6px; padding: 7px 12px; background: #E9EBF8;
+    color: var(--text-main); font-weight: 600; font-size: 13px; border-left: 3px solid var(--primary);
+  }
   .sd-table td {
     padding: 10px 12px;
     border-bottom: 1px solid var(--border-light);
@@ -976,41 +980,48 @@
 
 <!-- ===== 账龄区间抵减明细弹窗（账龄表区间值点击联动，样式同上） ===== -->
 <div class="sum-dialog-mask" id="ageDialog">
-  <div class="sum-dialog" style="width:1320px;">
+  <div class="sum-dialog" style="width:1080px;">
     <div class="sd-header">
       <span class="sd-title" id="ageDialogTitle">账龄区间抵减明细</span>
       <button class="sd-close" onclick="closeAgeDialog()">✕</button>
     </div>
     <div class="sd-body">
+      <div class="age-sec-label">逾期账单信息</div>
       <table class="sd-table">
         <thead>
           <tr>
             <th>账单号</th>
-            <th style="width:150px;">账单周期</th>
+            <th style="width:160px;">账单周期</th>
             <th style="width:80px;">逾期天数</th>
             <th class="num">逾期金额(原币)</th>
             <th class="num" style="width:90px;">记账汇率</th>
             <th class="num">逾期金额(CNY)</th>
-            <th style="width:110px;">抵减类型</th>
+          </tr>
+        </thead>
+        <tbody id="ageBillBody"></tbody>
+      </table>
+
+      <div class="age-sec-label">抵减信息</div>
+      <table class="sd-table">
+        <thead>
+          <tr>
+            <th style="width:130px;">抵减类型</th>
             <th>抵减单据</th>
             <th>被抵减单据</th>
             <th class="num">本次抵减金额(CNY)</th>
-            <th class="num">抵减单据剩余(CNY)</th>
-            <th class="num">被抵减单据剩余(CNY)</th>
           </tr>
         </thead>
-        <tbody id="ageDialogBody"></tbody>
-        <tfoot>
-          <tr class="sd-sum">
-            <td colspan="5">逾期金额(CNY)合计</td>
-            <td class="num" id="ageCnyTotal">--</td>
-            <td colspan="6"></td>
+        <tbody id="ageOffsetBody"></tbody>
+      </table>
+
+      <div class="age-sec-label">抵减后合计信息</div>
+      <table class="sd-table">
+        <thead>
+          <tr>
+            <th class="num">抵减后逾期合计</th>
           </tr>
-          <tr class="sd-sum">
-            <td colspan="11">被抵减单据剩余(CNY)合计</td>
-            <td class="num" id="ageTargetRemainTotal">--</td>
-          </tr>
-        </tfoot>
+        </thead>
+        <tbody id="ageTotalBody"></tbody>
       </table>
     </div>
     <div class="sd-footer">
@@ -1305,7 +1316,7 @@ function agingCell(col, row) {
     case 'syncStatus':  return v === '同步成功' ? tag('同步成功','success') : v === '同步失败' ? tag('同步失败','danger') : fmtText(v);
   }
   if (AGE_RANGE_LABELS[col.k] && Number(v) !== 0) {
-    return '<a class="op-link" title="查看抵减明细" onclick="openAgeDetail(\'' + row[13] + '\',\'' + col.k + '\')">'
+    return '<a class="op-link" title="查看账龄明细" onclick="openAgeDetail(\'' + row[13] + '\',\'' + col.k + '\',' + Number(v) + ')">'
       + fmtNum(v) + '</a>';
   }
   if (col.num) return fmtNum(v);
@@ -1744,78 +1755,81 @@ procDialog.addEventListener('click', function (e) {
 /* ===== 账龄区间抵减明细弹窗：按客户代码 + 逾期天数区间过滤被抵减的正/负数账单流水 ===== */
 var ageDialog = document.getElementById('ageDialog');
 
-function openAgeDetail(custCode, key) {
+function openAgeDetail(custCode, key, amount) {
   var range = AGE_RANGE_DAYS[key] || [0, -1];
   var label = AGE_RANGE_LABELS[key] || key;
-  /* 区间内全部正/负数账单（含未抵减账单），默认展示其抵减后金额 */
+  var afterTotal = Math.round((Number(amount) || 0) * 100) / 100; /* 账龄表当前区间金额 = 抵减后逾期合计 */
+
+  /* 区间内全部正/负数账单（含未抵减账单） */
   var nums = {};
   PROC_RESULT.documents.forEach(function (d) {
     if ((d.type === '正数账单' || d.type === '负数账单')
-      && d.days !== null
-      && d.days >= range[0] && d.days <= range[1]
-      && String(d.custCode || '').toUpperCase() === String(custCode || '').toUpperCase()) {
-      nums[d.no] = true;
-    }
+      && d.days !== null && d.days >= range[0] && d.days <= range[1]
+      && String(d.custCode || '').toUpperCase() === String(custCode || '').toUpperCase()) nums[d.no] = true;
   });
   var evs = PROC_RESULT.events.filter(function (e) { return nums[e.srcNo] || nums[e.targetNo]; });
   document.getElementById('ageDialogTitle').textContent = '账龄区间抵减明细 - ' + custCode + ' - ' + label;
+
   var docMap = {};
   PROC_RESULT.documents.forEach(function (d) { docMap[d.no] = d; });
-  var rows = [], matched = {}, cnyTotal = 0, remainTotal = 0;
+  var items = [], matched = {}, offsetTotal = 0;
   evs.forEach(function (e) {
-    /* 账单信息取该区间账单：优先被抵减的目标账单，其次来源账单 */
     var bill = docMap[e.targetNo] && nums[e.targetNo] ? docMap[e.targetNo]
       : docMap[e.srcNo] && nums[e.srcNo] ? docMap[e.srcNo] : null;
     if (!bill) return;
     matched[bill.no] = true;
-    var tc = e.type === '负数账单抵减' ? 'warning' : e.type === '充值单抵减' ? 'success' : 'violet';
-    cnyTotal += bill.cny;
-    remainTotal += e.targetRemain;
-    rows.push('<tr>'
-      + '<td>' + bill.no + '</td>'
-      + '<td>' + bill.billCycle + '</td>'
-      + '<td>' + bill.days + '</td>'
-      + '<td class="num">' + fmtNum(bill.amtO) + '</td>'
-      + '<td class="num">' + (bill.rate === null ? '--' : fmtNum(bill.rate, 4)) + '</td>'
-      + '<td class="num">' + fmtNum(bill.cny) + '</td>'
-      + '<td>' + tag(e.type, tc) + '</td>'
-      + '<td>' + e.srcNo + '</td>'
-      + '<td>' + e.targetNo + '</td>'
-      + '<td class="num">' + fmtNum(e.amt) + '</td>'
-      + '<td class="num">' + fmtNum(e.srcRemain) + '</td>'
-      + '<td class="num">' + fmtNum(e.targetRemain) + '</td>'
-      + '</tr>');
+    offsetTotal += e.amt;
+    items.push({ bill: bill, ev: e });
   });
-  /* 未被抵减的账单：逾期金额(CNY) = 被抵减单据剩余(CNY)，抵减流水部分按 0 / -- 处理 */
   Object.keys(nums).forEach(function (no) {
     if (matched[no]) return;
-    var bill = docMap[no];
-    cnyTotal += bill.cny;
-    remainTotal += bill.remain;
-    rows.push('<tr>'
-      + '<td>' + bill.no + '</td>'
-      + '<td>' + bill.billCycle + '</td>'
-      + '<td>' + bill.days + '</td>'
-      + '<td class="num">' + fmtNum(bill.amtO) + '</td>'
-      + '<td class="num">' + (bill.rate === null ? '--' : fmtNum(bill.rate, 4)) + '</td>'
-      + '<td class="num">' + fmtNum(bill.cny) + '</td>'
-      + '<td>--</td><td>--</td><td>--</td>'
-      + '<td class="num">' + fmtNum(0) + '</td>'
-      + '<td class="num">' + fmtNum(0) + '</td>'
-      + '<td class="num">' + fmtNum(bill.remain) + '</td>'
-      + '</tr>');
+    items.push({ bill: docMap[no], ev: null }); /* 未抵减账单：本次抵减金额按 0 */
   });
-  var body;
-  if (rows.length) {
-    body = rows.join('');
-    document.getElementById('ageCnyTotal').textContent = (Math.round(cnyTotal * 100) / 100).toLocaleString('zh-CN', { minimumFractionDigits: 2 });
-    document.getElementById('ageTargetRemainTotal').textContent = (Math.round(remainTotal * 100) / 100).toLocaleString('zh-CN', { minimumFractionDigits: 2 });
-  } else {
-    body = '<tr><td colspan="12" style="text-align:center;padding:36px 0;color:#909399;">该客户在该账龄区间暂无账单抵减明细</td></tr>';
-    document.getElementById('ageCnyTotal').textContent = '--';
-    document.getElementById('ageTargetRemainTotal').textContent = '--';
+  offsetTotal = Math.round(offsetTotal * 100) / 100;
+
+  /* 逾期金额(CNY)按权重分摊，使 逾期金额合计 - 本次抵减合计 = 当前账龄区间金额 */
+  var beforeTotal = Math.round((afterTotal + offsetTotal) * 100) / 100;
+  var weights = items.map(function (it) { return it.ev ? Math.max(it.ev.amt, 0) : Math.max(it.bill.cny, 0); });
+  var wSum = weights.reduce(function (s, w) { return s + w; }, 0);
+  var allocated = 0;
+  items.forEach(function (it, i) {
+    var cny = i === items.length - 1
+      ? Math.round((beforeTotal - allocated) * 100) / 100
+      : Math.round(beforeTotal * (wSum ? weights[i] / wSum : 1 / items.length) * 100) / 100;
+    allocated = Math.round((allocated + cny) * 100) / 100;
+    it.cny = cny;
+    it.amtO = it.bill.rate ? Math.round(cny / it.bill.rate * 100) / 100 : cny;
+  });
+
+  var billRows = '', offsetRows = '';
+  items.forEach(function (it) {
+    billRows += '<tr>'
+      + '<td>' + it.bill.no + '</td>'
+      + '<td>' + it.bill.billCycle + '</td>'
+      + '<td>' + it.bill.days + '</td>'
+      + '<td class="num">' + fmtNum(it.amtO) + '</td>'
+      + '<td class="num">' + (it.bill.rate === null ? '--' : fmtNum(it.bill.rate, 4)) + '</td>'
+      + '<td class="num">' + fmtNum(it.cny) + '</td>'
+      + '</tr>';
+    var tc = it.ev ? (it.ev.type === '负数账单抵减' ? 'warning' : it.ev.type === '充值单抵减' ? 'success' : 'violet') : '';
+    offsetRows += '<tr>'
+      + '<td>' + (it.ev ? tag(it.ev.type, tc) : '--') + '</td>'
+      + '<td>' + (it.ev ? it.ev.srcNo : '--') + '</td>'
+      + '<td>' + (it.ev ? it.ev.targetNo : '--') + '</td>'
+      + '<td class="num">' + fmtNum(it.ev ? it.ev.amt : 0) + '</td>'
+      + '</tr>';
+  });
+  if (!items.length) {
+    billRows = '<tr><td colspan="6" style="text-align:center;padding:24px 0;color:#909399;">该客户在该账龄区间暂无账单</td></tr>';
+    offsetRows = '<tr><td colspan="4" style="text-align:center;padding:24px 0;color:#909399;">暂无抵减信息</td></tr>';
+    beforeTotal = afterTotal; /* 无抵减：抵减后逾期合计仍等于当前账龄区间金额 */
+    offsetTotal = 0;
   }
-  document.getElementById('ageDialogBody').innerHTML = body;
+  document.getElementById('ageBillBody').innerHTML = billRows;
+  document.getElementById('ageOffsetBody').innerHTML = offsetRows;
+  document.getElementById('ageTotalBody').innerHTML = '<tr class="sd-sum">'
+    + '<td class="num">' + fmtNum(afterTotal) + '</td>'
+    + '</tr>';
   ageDialog.classList.add('open');
 }
 
