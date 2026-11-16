@@ -876,50 +876,7 @@
         <div class="card">
           <div class="card-body">
 
-            <div class="seg-row">
-              <span class="seg-label">单据类型:</span>
-              <div class="seg-group" id="procTypeSeg">
-                <button class="seg-btn active" onclick="segPick(this)">全部</button>
-                <button class="seg-btn" onclick="segPick(this)">正数账单</button>
-                <button class="seg-btn" onclick="segPick(this)">负数账单</button>
-                <button class="seg-btn" onclick="segPick(this)">充值单</button>
-                <button class="seg-btn" onclick="segPick(this)">宽限单</button>
-              </div>
-            </div>
-            <div class="seg-row">
-              <span class="seg-label">抵减状态:</span>
-              <div class="seg-group" id="procStatusSeg">
-                <button class="seg-btn active" onclick="segPick(this)">全部</button>
-                <button class="seg-btn" onclick="segPick(this)">未抵减</button>
-                <button class="seg-btn" onclick="segPick(this)">部分抵减</button>
-                <button class="seg-btn" onclick="segPick(this)">已抵完</button>
-                <button class="seg-btn" onclick="segPick(this)">不抵减</button>
-              </div>
-            </div>
-
             <div class="filter-grid">
-              <div class="fi">
-                <label>单据编号:</label>
-                <div class="fi-controls">
-                  <input type="text" class="el-input" id="pDocNo" placeholder="请输入单据编号">
-                </div>
-              </div>
-              <div class="fi">
-                <label>币种:</label>
-                <div class="fi-controls">
-                  <select class="el-select" id="pDocCur"><option value="">请选择币种</option><option>CNY</option><option>USD</option><option>EUR</option><option>JPY</option><option>HKD</option></select>
-                </div>
-              </div>
-              <div class="fi">
-                <label>逾期天数:</label>
-                <div class="fi-controls">
-                  <div class="range-group">
-                    <input type="text" class="el-input" id="pDocDayMin" placeholder="最小值">
-                    <span class="range-sep">-</span>
-                    <input type="text" class="el-input" id="pDocDayMax" placeholder="最大值">
-                  </div>
-                </div>
-              </div>
               <div class="fi">
                 <label>抵减类型:</label>
                 <div class="fi-controls">
@@ -964,45 +921,8 @@
               </div>
             </div>
 
-            <!-- 页内标签切换：单据列表 / 抵减过程记录 -->
-            <div class="seg-row">
-              <span class="seg-label">列表:</span>
-              <div class="seg-group tab-seg-group" id="procTabGroup">
-                <button class="seg-btn active" id="procTabDocs" onclick="switchProcTab('docs')">单据列表</button>
-                <button class="seg-btn" id="procTabEvents" onclick="switchProcTab('events')">抵减过程记录</button>
-              </div>
-            </div>
-
-            <!-- 单据列表 -->
-            <div id="procDocsBlock">
-              <div class="table-wrap">
-                <table class="el-table">
-                  <thead id="pDocHead"></thead>
-                  <tbody id="pDocBody"></tbody>
-                </table>
-              </div>
-              <div class="pagination">
-                <span id="pDocPgTotal"></span>
-                <div class="pg-sizes">
-                  <select class="el-select" id="pDocPgSize" onchange="cur.changeSize(this)">
-                    <option value="10">10条/页</option>
-                    <option value="20">20条/页</option>
-                    <option value="50">50条/页</option>
-                    <option value="100">100条/页</option>
-                  </select>
-                </div>
-                <button class="pg-btn" id="pDocPgPrev" onclick="cur.goPage(-1)">上一页</button>
-                <span id="pDocPgPages"></span>
-                <button class="pg-btn" id="pDocPgNext" onclick="cur.goPage(1)">下一页</button>
-                <div class="pg-jumper">
-                  <span>前往</span><input type="number" min="1" id="pDocPgJump" value="1"><span>页</span>
-                  <button class="btn" style="height:26px;padding:0 10px;" onclick="cur.goPage()">GO</button>
-                </div>
-              </div>
-            </div>
-
             <!-- 抵减过程记录 -->
-            <div id="procEventsBlock" style="display:none;">
+            <div id="procEventsBlock">
               <div class="table-wrap">
                 <table class="el-table">
                   <thead id="pEvHead"></thead>
@@ -1910,21 +1830,6 @@ var ON_COLS = [
 var ON_DEFAULT = ['docType','docNo','custCode','acctCode','signSubj','servSubj','custStar','salesArea','salesRep',
   'days','cur','amtO','rate','cny','offsetAmt','remain','status'];
 
-/* ===== 视图三：单据列表（列定义 / 单元格 / 筛选 / 合计） ===== */
-var PROC_COLS = [
-  { k:'docType',   label:'单据类型',         w:110 },
-  { k:'docNo',     label:'单据编号',         w:170 },
-  { k:'days',      label:'逾期天数',         w:100 },
-  { k:'cur',       label:'币种',             w:90 },
-  { k:'amtO',      label:'金额(原币)',       num:true, w:130 },
-  { k:'rate',      label:'记账汇率',         num:true, dec:4, w:110 },
-  { k:'cny',       label:'抵减前金额(CNY)',  num:true, w:140 },
-  { k:'offsetAmt', label:'被抵减金额(CNY)',  num:true, w:150 },
-  { k:'remain',    label:'抵减后余额(CNY)',  num:true, w:150 },
-  { k:'status',    label:'抵减状态',         w:110 }
-];
-var PROC_DEFAULT = ['docType','docNo','days','cur','amtO','rate','cny','offsetAmt','remain','status'];
-
 function procCell(col, d) {
   if (col.k === 'docType') {
     var tc = d.type === '正数账单' ? 'blue' : d.type === '负数账单' ? 'warning'
@@ -1944,25 +1849,6 @@ function procCell(col, d) {
   }
   if (col.num) return fmtNum(d[col.k]);
   return fmtText(d[col.k]);
-}
-
-/* 单据列表筛选：类型/状态 seg + 单据编号 + 币种 + 逾期天数区间 */
-function procDocFilters() {
-  var res = PROC_RESULT.documents.slice();
-  var typeBtn = document.querySelector('#procTypeSeg .seg-btn.active');
-  var type = typeBtn ? typeBtn.textContent.trim() : '全部';
-  if (type !== '全部') res = res.filter(function (d) { return d.type === type; });
-  var stBtn = document.querySelector('#procStatusSeg .seg-btn.active');
-  var st = stBtn ? stBtn.textContent.trim() : '全部';
-  if (st !== '全部') res = res.filter(function (d) { return d.status === st; });
-  var no = gv('pDocNo');
-  if (no) res = res.filter(function (d) { return d.no.toUpperCase().indexOf(no.toUpperCase()) > -1; });
-  var c = gv('pDocCur');
-  if (c) res = res.filter(function (d) { return d.cur === c; });
-  var dMin = Number(gv('pDocDayMin')), dMax = Number(gv('pDocDayMax'));
-  if (gv('pDocDayMin') !== '') res = res.filter(function (d) { return d.days !== null && d.days >= dMin; });
-  if (gv('pDocDayMax') !== '') res = res.filter(function (d) { return d.days !== null && d.days <= dMax; });
-  return res;
 }
 
 /* ===== 视图三：抵减过程记录（列定义 / 单元格 / 筛选） ===== */
@@ -2004,16 +1890,6 @@ var PROC_SUM = ['正数账单', '负数账单', '充值单', '宽限单'].map(fu
   PROC_RESULT.documents.forEach(function (d) { if (d.type === t) off += d.offset; });
   return [t, Math.round(off * 100) / 100];
 });
-
-/* ===== 页内标签切换：单据列表 / 抵减过程记录 ===== */
-function switchProcTab(key) {
-  var isDocs = key === 'docs';
-  document.getElementById('procDocsBlock').style.display = isDocs ? '' : 'none';
-  document.getElementById('procEventsBlock').style.display = isDocs ? 'none' : '';
-  document.getElementById('procTabDocs').classList.toggle('active', isDocs);
-  document.getElementById('procTabEvents').classList.toggle('active', !isDocs);
-  cur = isDocs ? PAGES.process : PAGES.processEvents;
-}
 
 /* ===== 抵减明细联动弹窗：展示某单据参与的全部抵减流水 ===== */
 var procDialog = document.getElementById('procDialog');
@@ -2079,18 +1955,6 @@ var PAGES = {
     applyFilters: function () { this.filtered = offsetFilters(); }
   }),
   process: createPage({
-    key: 'process',
-    COLS: PROC_COLS,
-    DEFAULT_VISIBLE: PROC_DEFAULT,
-    rows: PROC_RESULT.documents,
-    el: { head: 'pDocHead', body: 'pDocBody', pgTotal: 'pDocPgTotal', pgPages: 'pDocPgPages', pgPrev: 'pDocPgPrev', pgNext: 'pDocPgNext', pgJump: 'pDocPgJump' },
-    cellHtml: procCell,
-    sumTitle: '抵减金额合计（按单据类型）',
-    sumData: PROC_SUM,
-    opHtml: function (d) { return '<a class="op-link" onclick="openProcDetail(\'' + d.no + '\')">抵减明细</a>'; },
-    applyFilters: function () { this.filtered = procDocFilters(); }
-  }),
-  processEvents: createPage({
     key: 'process',
     COLS: PROC_EVENT_COLS,
     DEFAULT_VISIBLE: PROC_EVENT_DEFAULT,
@@ -2258,7 +2122,6 @@ sumDialog.addEventListener('click', function (e) {
 PAGES.aging.render();
 PAGES.offset.render();
 PAGES.process.render();
-PAGES.processEvents.render();
 PAGES.offsetnew.render();
 </script>
 </body>
