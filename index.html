@@ -509,14 +509,14 @@
           <i class="mi-icon">🔁</i><span class="mi-text">逾期账单抵减过程</span>
         </div>
       </li>
-      <li class="menu-item" data-view="grace" title="宽限期申请">
+      <li class="menu-item" data-view="grace" title="宽限期申请OA表单">
         <div class="mi-row" onclick="switchView('grace')">
-          <i class="mi-icon">📝</i><span class="mi-text">宽限期申请</span>
+          <i class="mi-icon">📝</i><span class="mi-text">宽限期申请OA表单</span>
         </div>
       </li>
-      <li class="menu-item" data-view="whitelist" title="逾期白名单申请">
+      <li class="menu-item" data-view="whitelist" title="逾期白名单申请OA表单">
         <div class="mi-row" onclick="switchView('whitelist')">
-          <i class="mi-icon">🏷️</i><span class="mi-text">逾期白名单申请</span>
+          <i class="mi-icon">🏷️</i><span class="mi-text">逾期白名单申请OA表单</span>
         </div>
       </li>
     </ul>
@@ -2498,7 +2498,7 @@ function onDocFilters() {
   return res;
 }
 
-var VIEW_NAMES = { aging: '客户逾期账龄表', offsetnew: '逾期账单抵减明细', process: '逾期账单抵减过程', grace: '宽限期申请', whitelist: '逾期白名单申请' };
+var VIEW_NAMES = { aging: '客户逾期账龄表', offsetnew: '逾期账单抵减明细', process: '逾期账单抵减过程', grace: '宽限期申请OA表单', whitelist: '逾期白名单申请OA表单' };
 var cur = PAGES.aging;
 
 function switchView(key) {
