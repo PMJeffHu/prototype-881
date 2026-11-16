@@ -11,9 +11,9 @@ var ExcelJS = require('exceljs');
 var html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
 var script = html.match(/<script>([\s\S]*)<\/script>/)[1];
 
-/* 提取四类单据数据 + 抵减引擎 + PROC_RESULT（截止到视图三页面代码之前） */
+/* 提取四类单据数据 + 单号重写 + 抵减引擎 + PROC_RESULT（截止到页面层代码标记） */
 var start = script.indexOf('var PROC_POS');
-var end = script.indexOf('/* ===== 视图三：单据列表');
+var end = script.indexOf('/* ===== 页面层代码');
 if (start < 0 || end < 0) { console.error('提取失败：未找到 PROC 数据或引擎边界'); process.exit(1); }
 
 var sandbox = { module: { exports: {} } };
