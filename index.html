@@ -260,6 +260,7 @@
   .cell-empty { color: #C0C4CC; }
 
   /* ===== 宽限期申请单（静态表格） ===== */
+  .gpa-top { margin-bottom: 8px; text-align: center; color: var(--text-main); font-size: 14px; }
   .gpa-doc { border: 1px solid var(--border-light); background: #fff; font-size: 12px; }
   .gpa-title { padding: 12px; text-align: center; border-bottom: 1px solid var(--border-light); background: #FAFAFA; }
   .gpa-title .cn { font-size: 17px; font-weight: 700; color: var(--text-main); }
@@ -1340,14 +1341,15 @@
     </div>
   </div>
 
-  <!-- ===== 视图六：逾期白名单申请（静态 HTML 表格，参照宽限期申请） ===== -->
+  <!-- ===== 视图六：逾期白名单申请OA表单（静态 HTML 表格，参照截图） ===== -->
   <div class="view" id="view-whitelist">
     <div class="card">
       <div class="card-body">
+        <div class="gpa-top">胡俊峰的逾期账户限制白名单申请 Whitelist Application on Overdue Account</div>
         <div class="gpa-doc">
           <div class="gpa-title">
-            <div class="cn">逾期账户限制宽限申请</div>
-            <div class="en">Grace Period Application For Overdue Accounts</div>
+            <div class="cn">逾期账户限制白名单申请</div>
+            <div class="en">Whitelist Application on Overdue Account</div>
           </div>
 
           <table class="gpa-table">
@@ -1357,94 +1359,77 @@
             </colgroup>
             <tbody>
               <tr>
-                <td class="lbl">申请人 <span class="en">Applicant</span></td><td class="val">胡惠敏</td>
-                <td class="lbl">申请日期 <span class="en">Application Date</span></td><td class="val">2026-01-28</td>
+                <td class="lbl">申请人 <span class="en">Applicant</span></td><td class="val">胡俊敏</td>
+                <td class="lbl">销售代表 <span class="en">Sale Execution</span></td><td class="val">胡俊峰</td>
               </tr>
               <tr>
-                <td class="lbl">销售代表 <span class="en">Sale Execution</span></td><td class="val">胡锋</td>
-                <td class="lbl">销售部门 <span class="en">Applicant Department</span></td><td class="val">默认销售区域</td>
+                <td class="lbl">申请部门 <span class="en">Department of Applicant</span></td>
+                <td class="val">纵横网络/FBU仓储事业部/FBU技术部/系统设计组</td>
+                <td class="lbl">申请日期 <span class="en">Application Date</span></td><td class="val">2026-11-16</td>
               </tr>
               <tr>
-                <td class="lbl">申请编号 <span class="en">Application ID</span></td><td class="val">ZJ-TJ-LC-20260128520</td>
-                <td class="lbl">签约业务 <span class="en">Contract Service</span></td><td class="val">海外仓储</td>
+                <td class="lbl">客户代码 <span class="en">Client Code</span></td><td class="val">G5099</td>
+                <td class="lbl">首次成交时间 <span class="en">Activated Time*</span></td><td class="val">2021-05-07 21:27:50</td>
               </tr>
               <tr>
-                <td class="lbl">账户编号 <span class="en">Account ID</span></td><td class="val">ACEL281601</td>
-                <td class="lbl">客户代码 <span class="en">Client Code</span></td><td class="val">EL2816</td>
+                <td class="lbl">近一年销售额（CNY）<br><span class="en">Annual Sales (CNY)*</span></td><td class="val">0.00</td>
+                <td class="lbl">客户体量<br><span class="en">Monthly Sales Volume (CNY)</span></td><td class="val">0.00 W</td>
               </tr>
               <tr>
-                <td class="lbl">客户体量（CNY）<br><span class="en">Monthly SalesVolume</span></td><td class="val">0.00 W</td>
-                <td class="lbl">付款周期（天） <span class="en">Payment Period</span></td><td class="val">0</td>
-              </tr>
-              <tr>
-                <td class="lbl">宽限起始日期 <span class="en">Start Date</span></td><td class="val">2026-01-28</td>
-                <td class="lbl">宽限截止日期 <span class="en">Ending Date</span></td><td class="val">2026-01-28</td>
-              </tr>
-              <tr>
-                <td class="lbl">宽限金额（CNY）<br><span class="en">Billing Amount</span></td><td class="val">15000.00</td>
-                <td class="lbl">附件 <span class="en">Attachment</span></td><td class="val"></td>
-              </tr>
-              <tr>
-                <td class="lbl">申请原因 <span class="en">Reason For Application</span></td>
-                <td class="val" colspan="3">ACEL281601 未逾期发起白名单</td>
+                <td class="lbl">申请原因 <span class="en">Application Reason</span></td>
+                <td class="val" colspan="3">R881测试</td>
               </tr>
             </tbody>
           </table>
 
-          <div class="gpa-sec">客户应收明细<span class="en">OverdueDetails / 单位:元</span></div>
+          <div class="gpa-sec">客户合作情况及结算条款 <span class="en">Business Overall and Billing Term</span></div>
           <div class="table-wrap">
             <table class="gpa-table">
               <thead>
                 <tr>
                   <th style="width:44px;">序号</th>
+                  <th>客户编号<br><span class="en">Account ID</span></th>
+                  <th>签约业务<br><span class="en">Contract Service</span></th>
+                  <th>付款周期<br><span class="en">Payment Period</span></th>
                   <th>临时宽限金额<br><span class="en">Temp Grace Period Amount</span></th>
                   <th>剩余宽限金额<br><span class="en">Applied Temp. Grace Period Amount Balance</span></th>
-                  <th>临时宽限期起始时间<br><span class="en">Start Time</span></th>
-                  <th>临时宽限期截止时间<br><span class="en">End Time</span></th>
-                  <th>应收账款<br><span class="en">Total Receivables</span></th>
-                  <th>未逾期合计<br><span class="en">Current Amount</span></th>
-                  <th>逾期合计CNY<br><span class="en">Amount Due</span></th>
-                  <th>1-30</th>
-                  <th>31-60</th>
+                  <th>临时宽限期<br><span class="en">Temp Grace Period Amount</span></th>
+                  <th>应收账款(CNY)<br><span class="en">Payable Amount</span></th>
+                  <th>未逾期合计CNY<br><span class="en">Current Amount</span></th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td class="ctr">1</td><td class="num">0.00</td><td class="num">0.00</td>
-                  <td class="ctr">--</td><td class="ctr">--</td>
-                  <td class="num">1,096.99</td><td class="num">1,096.99</td><td class="num">0.00</td>
+                  <td class="ctr">1</td><td class="ctr">ACG5099003</td><td class="ctr">海外仓储</td>
+                  <td class="ctr">0<br>(天)</td>
+                  <td class="num"></td><td class="num"></td><td class="ctr"></td>
                   <td class="num">0.00</td><td class="num">0.00</td>
                 </tr>
                 <tr>
-                  <td class="ctr" colspan="7">合计</td><td class="num">0.00</td>
+                  <td class="ctr">2</td><td class="ctr">ACG5099004</td><td class="ctr">中转代发</td>
+                  <td class="ctr">0<br>(天)</td>
+                  <td class="num"></td><td class="num"></td><td class="ctr"></td>
+                  <td class="num">0.00</td><td class="num">0.00</td>
+                </tr>
+                <tr>
+                  <td class="ctr">3</td><td class="ctr">ACG5099005</td><td class="ctr">海外仓储</td>
+                  <td class="ctr">0<br>(天)</td>
+                  <td class="num"></td><td class="num"></td><td class="ctr"></td>
+                  <td class="num">0.00</td><td class="num">0.00</td>
+                </tr>
+                <tr>
+                  <td class="ctr">4</td><td class="ctr">ACG5099008</td><td class="ctr">海外仓储</td>
+                  <td class="ctr">0<br>(天)</td>
+                  <td class="num"></td><td class="num"></td><td class="ctr"></td>
+                  <td class="num">0.00</td><td class="num">0.00</td>
+                </tr>
+                <tr>
+                  <td class="ctr" colspan="7">合计</td>
                   <td class="num">0.00</td><td class="num">0.00</td>
                 </tr>
               </tbody>
             </table>
           </div>
-
-          <div class="gpa-sec">客户逾期反馈<span class="en">Overdue Reason</span></div>
-          <table class="gpa-table">
-            <colgroup>
-              <col style="width:44px;"><col style="width:16%;"><col style="width:16%;">
-              <col style="width:18%;"><col style="width:28%;"><col style="width:18%;">
-            </colgroup>
-            <thead>
-              <tr>
-                <th>序号</th>
-                <th>逾期类型<br><span class="en">Overdue Reason</span></th>
-                <th>客户状态<br><span class="en">Account Status</span></th>
-                <th>应收账款状态<br><span class="en">Receivable Status</span></th>
-                <th>逾期原因描述<br><span class="en">Overdue Reason Details</span></th>
-                <th>预计回款时间<br><span class="en">Estimated Payment Time</span></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td colspan="6" style="height:24px;"></td>
-              </tr>
-            </tbody>
-          </table>
         </div>
       </div>
     </div>
