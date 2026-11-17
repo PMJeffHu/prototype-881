@@ -1486,7 +1486,7 @@
                 <th><span class="req">*</span>客户体量起始(CNY)<i class="wf-info">i</i></th>
                 <th><span class="req">*</span>客户体量截止(CNY)<i class="wf-info">i</i></th>
                 <th><span class="req">*</span>逾期天数</th>
-                <th><span class="req">*</span>监缩金额（CNY）</th>
+                <th><span class="req">*</span>逾期金额（CNY）</th>
                 <th style="width:100px;">操作</th>
               </tr>
             </thead>
@@ -1498,7 +1498,7 @@
                 <td><select class="wf-input"><option>请选择签约业务</option><option>海外仓储</option><option>中转代发</option></select></td>
                 <td><div class="wf-suffix"><input class="wf-input" placeholder="请输入客户体量起始值"><span class="wf-unit">W</span></div></td>
                 <td><div class="wf-suffix"><input class="wf-input" placeholder="请输入客户体量截止值"><span class="wf-unit">W</span></div></td>
-                <td><select class="wf-input"><option>请选择逾期天数</option><option>30</option><option>60</option><option>90</option><option>180</option><option>360</option></select></td>
+                <td><div class="wf-suffix"><span class="wf-unit">&gt;</span><input class="wf-input" inputmode="numeric" placeholder="请输入逾期天数" oninput="this.value=this.value.replace(/[^0-9]/g,'').replace(/^0+(?=\d)/,'')"></div></td>
                 <td><input class="wf-input" placeholder="请输入金额"></td>
                 <td><a class="op-link" onclick="alert('原型演示：删除')">删除</a><a class="op-link" onclick="alert('原型演示：复制')">复制</a></td>
               </tr>
