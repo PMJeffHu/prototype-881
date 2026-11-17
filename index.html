@@ -629,7 +629,7 @@
   <div class="main">
     <div class="header">
       <div class="breadcrumb">
-        <span>首页</span><span class="sep">/</span><span>报表中心</span><span class="sep">/</span><span class="cur" id="crumbCur">客户逾期账龄表</span>
+        <span class="crumb-pre"><span>首页</span><span class="sep">/</span><span>报表中心</span><span class="sep">/</span></span><span class="cur" id="crumbCur">客户逾期账龄表</span>
       </div>
       <div class="header-right">
         <span class="header-icon" title="消息">🔔<span class="badge">3</span></span>
@@ -2861,10 +2861,12 @@ function switchView(key) {
   });
   document.getElementById('crumbCur').textContent = VIEW_NAMES[key] || key;
   cur = PAGES[key] || null;
-  /* OA 表单类页面隐藏顶部用户信息行（张财务） */
+  /* OA 表单类页面隐藏顶部用户信息行（张财务）与「首页/报表中心」面包屑前缀 */
   var OA_HIDE_USER = { grace: 1, whitelist: 1, stopApply: 1 };
   var userEl = document.querySelector('.user-info');
   if (userEl) userEl.style.display = OA_HIDE_USER[key] ? 'none' : '';
+  var crumbPre = document.querySelector('.crumb-pre');
+  if (crumbPre) crumbPre.style.display = OA_HIDE_USER[key] ? 'none' : '';
 }
 
 /* ===== 字段选择弹出层（作用于当前视图页面） ===== */
