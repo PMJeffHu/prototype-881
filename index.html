@@ -1213,7 +1213,7 @@
           <div class="card-body">
             <div class="table-toolbar">
               <div class="toolbar-left">
-                <button class="btn btn-primary" onclick="alert('原型演示：导出 Excel')">⬇ 导出</button>
+                <button class="btn btn-primary" onclick="exportOffsetCsv()">⬇ 导出</button>
                 <button class="btn btn-primary" onclick="alert('原型演示：一键查看原文')">一键查看原文</button>
               </div>
             </div>
@@ -3018,6 +3018,32 @@ function closeSumDialog() { sumDialog.classList.remove('open'); }
 sumDialog.addEventListener('click', function (e) {
   if (e.target === this) closeSumDialog();
 });
+
+/* ===== 逾期账单抵减明细：导出当前列表数据（字段与顺序同列表展示） ===== */
+function exportOffsetCsv() {
+  var p = PAGES.offsetnew;
+  var cols = p.visibleCols();
+  if (!cols.length) { alert('当前无展示字段'); return; }
+  var rows = p.filtered || [];
+  if (!rows.length) { alert('当前列表无数据'); return; }
+  function esc(v) {
+    if (v === undefined || v === null) return '';
+    v = String(v);
+    if (/[",\n\r]/.test(v)) v = '"' + v.replace(/"/g, '""') + '"';
+    return v;
+  }
+  var csv = '\uFEFF' + cols.map(function (c) { return esc(c.label); }).join(',')
+    + '\r\n' + rows.map(function (r) {
+      return cols.map(function (c) { return esc(r[c.k]); }).join(',');
+    }).join('\r\n');
+  var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '逾期账单抵减明细_' + new Date().toISOString().slice(0, 10) + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function () { URL.revokeObjectURL(a.href); document.body.removeChild(a); }, 0);
+}
 
 /* ===== 初始化 ===== */
 PAGES.aging.render();
