@@ -2861,6 +2861,10 @@ function switchView(key) {
   });
   document.getElementById('crumbCur').textContent = VIEW_NAMES[key] || key;
   cur = PAGES[key] || null;
+  /* OA 表单类页面隐藏顶部用户信息行（张财务） */
+  var OA_HIDE_USER = { grace: 1, whitelist: 1, stopApply: 1 };
+  var userEl = document.querySelector('.user-info');
+  if (userEl) userEl.style.display = OA_HIDE_USER[key] ? 'none' : '';
 }
 
 /* ===== 字段选择弹出层（作用于当前视图页面） ===== */
