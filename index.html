@@ -188,6 +188,11 @@
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .fi-controls { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; }
+  .fi-controls .code-type { flex: 0 0 110px; width: 110px; }
+  /* 筛选区下拉复选：与 el-input 高度对齐 */
+  .filter-grid .wf-multi { flex: 1; min-width: 0; }
+  .filter-grid .wf-multi-val { height: 30px; line-height: 28px; }
+  .filter-grid .wf-multi-pop { top: 32px; z-index: 60; }
 
   .el-input, .el-select {
     height: 30px; padding: 0 9px;
@@ -1059,14 +1064,14 @@
                 <div class="wf-ctl wf-multi" id="applyTypeSel">
                   <div class="wf-multi-val" onclick="wfMultiToggle(event)" data-placeholder="请选择申请类型">请选择申请类型</div>
                   <div class="wf-multi-pop" onclick="event.stopPropagation()">
-                    <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange()">计费争议未解决</label>
-                    <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange()">计费争议已解决待回款</label>
-                    <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange()">赔返流程未完结</label>
-                    <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange()">未按时回款</label>
-                    <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange()">资金紧张</label>
-                    <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange()">付款异常</label>
-                    <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange()">约定结算账期与系统不一致</label>
-                    <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange()">其他</label>
+                    <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">计费争议未解决</label>
+                    <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">计费争议已解决待回款</label>
+                    <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">赔返流程未完结</label>
+                    <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">未按时回款</label>
+                    <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">资金紧张</label>
+                    <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">付款异常</label>
+                    <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">约定结算账期与系统不一致</label>
+                    <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">其他</label>
                   </div>
                 </div>
               </div>
@@ -1172,7 +1177,7 @@
                 <button class="seg-btn" onclick="segPick(this)">未抵减</button>
                 <button class="seg-btn" onclick="segPick(this)">部分抵减</button>
                 <button class="seg-btn" onclick="segPick(this)">已抵完</button>
-                <button class="seg-btn" onclick="segPick(this)">不抵减</button>
+                <button class="seg-btn" onclick="segPick(this)">无法抵减</button>
               </div>
             </div>
 
@@ -1184,9 +1189,50 @@
                 </div>
               </div>
               <div class="fi">
-                <label>币种:</label>
+                <label>编码:</label>
                 <div class="fi-controls">
-                  <select class="el-select" id="onDocCur"><option value="">请选择币种</option><option>CNY</option><option>USD</option><option>EUR</option><option>JPY</option><option>HKD</option></select>
+                  <select class="el-select code-type" id="onCodeType">
+                    <option value="">编码类型</option>
+                    <option>客户代码</option>
+                    <option>账户编号</option>
+                  </select>
+                  <input type="text" class="el-input" id="onCode" placeholder="请输入编码">
+                </div>
+              </div>
+              <div class="fi">
+                <label>服务主体:</label>
+                <div class="fi-controls">
+                  <div class="wf-multi" id="onServSel">
+                    <div class="wf-multi-val" onclick="wfMultiToggle(event)" data-placeholder="请选择服务主体">请选择服务主体</div>
+                    <div class="wf-multi-pop" onclick="event.stopPropagation()">
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">CIRRO FULFILLMENT MEXICO</label>
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">ETARGET LIMITED</label>
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">US ELOGISTICS SERVICE CORP</label>
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">深圳易可达科技有限公司</label>
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">Super Smart Service ltd</label>
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">ZENDA LOGISTICS CORP.</label>
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">ELOGISTICS (GA) SERVICE CORP</label>
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">JS LOGISTICS</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="fi">
+                <label>销售区域:</label>
+                <div class="fi-controls">
+                  <div class="wf-multi" id="onAreaSel">
+                    <div class="wf-multi-val" onclick="wfMultiToggle(event)" data-placeholder="请选择销售区域">请选择销售区域</div>
+                    <div class="wf-multi-pop" onclick="event.stopPropagation()">
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">战略客户部</label>
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">美洲销售组</label>
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">品牌客户组</label>
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">华北区</label>
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">华东区</label>
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">广佛区</label>
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">默认销售区域</label>
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">测试专用产品业务勿用</label>
+                    </div>
+                  </div>
                 </div>
               </div>
               <div class="fi">
@@ -1196,6 +1242,53 @@
                     <input type="text" class="el-input" id="onDayMin" placeholder="最小值">
                     <span class="range-sep">-</span>
                     <input type="text" class="el-input" id="onDayMax" placeholder="最大值">
+                  </div>
+                </div>
+              </div>
+              <div class="fi">
+                <label>币种:</label>
+                <div class="fi-controls">
+                  <select class="el-select" id="onDocCur"><option value="">请选择币种</option><option>CNY</option><option>USD</option><option>EUR</option><option>JPY</option><option>HKD</option></select>
+                </div>
+              </div>
+              <div class="fi">
+                <label>归属区间:</label>
+                <div class="fi-controls">
+                  <div class="wf-multi" id="onAgeSel">
+                    <div class="wf-multi-val" onclick="wfMultiToggle(event)" data-placeholder="请选择归属区间">请选择归属区间</div>
+                    <div class="wf-multi-pop" onclick="event.stopPropagation()">
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">未逾期合计</label>
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">逾期1-30天</label>
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">逾期31-60天</label>
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">逾期61-90天</label>
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">逾期91-180天</label>
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">逾期181-360天</label>
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">逾期360天以上</label>
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">待核销充值金额</label>
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">剩余宽限金额</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="fi">
+                <label>更新时间:</label>
+                <div class="fi-controls">
+                  <input type="datetime-local" class="el-input" id="onUpdateTime">
+                </div>
+              </div>
+              <div class="fi">
+                <label>批次号:</label>
+                <div class="fi-controls">
+                  <input type="text" class="el-input" id="onBatchNo" placeholder="请输入批次号">
+                </div>
+              </div>
+              <div class="fi">
+                <label>客户体量:</label>
+                <div class="fi-controls">
+                  <div class="range-group">
+                    <input type="text" class="el-input" id="onScaleMin" placeholder="最小值">
+                    <span class="range-sep">-</span>
+                    <input type="text" class="el-input" id="onScaleMax" placeholder="最大值">
                   </div>
                 </div>
               </div>
@@ -1918,7 +2011,16 @@ function createPage(opts) {
     var view = document.getElementById('view-' + p.key);
     view.querySelectorAll('.filter-grid input[type="text"]').forEach(function (i) { i.value = ''; });
     view.querySelectorAll('.filter-grid input[type="date"]').forEach(function (i) { i.value = '2026-11-12'; });
+    view.querySelectorAll('.filter-grid input[type="datetime-local"]').forEach(function (i) { i.value = ''; });
     view.querySelectorAll('.filter-grid .el-select').forEach(function (s) { s.selectedIndex = 0; });
+    view.querySelectorAll('.filter-grid .wf-multi').forEach(function (m) {
+      m.querySelectorAll('input[type="checkbox"]').forEach(function (cb) { cb.checked = false; });
+      var val = m.querySelector('.wf-multi-val');
+      if (val) {
+        val.textContent = val.getAttribute('data-placeholder') || '请选择';
+        val.title = val.textContent;
+      }
+    });
     view.querySelectorAll('.seg-group:not(.tab-seg-group)').forEach(function (g) {
       g.querySelectorAll('.seg-btn').forEach(function (b, i) { b.classList.toggle('active', i === 0); });
     });
@@ -2133,7 +2235,7 @@ var AGING_SUM = [
    - P001~P003 逾期天数>180，仅宽限单可抵减（规则4）
    - N004 需跨两张正数账单才能抵完（规则2"抵不完继续往天数小的账单"）
    - N003 会把 P004 抵至耗尽并跨到 P005
-   - R003 为负数充值单，演示"不抵减"（规则3例外）
+   - R003 为负数充值单，演示"无法抵减"（规则3例外）
    - R002 抵减过程中耗尽一张正数账单后继续抵下一张
    - P008~P012 保持未抵减，演示"无可抵来源/条件不满足"
    ====================================================== */
@@ -2249,7 +2351,7 @@ function runOffsetEngine(pos, neg, recharge, grace) {
   var recharges = recharge.map(function (r) {
     var cny = round2(r[2] * r[3]);
     return { type: '充值单', no: r[0], days: null, cur: r[1], amtO: r[2], rate: r[3],
-             cny: cny, offset: 0, remain: cny, status: cny < 0 ? '不抵减' : '未抵减' };
+             cny: cny, offset: 0, remain: cny, status: cny < 0 ? '无法抵减' : '未抵减' };
   });
 
   var graces = grace.map(function (g) {
@@ -2303,7 +2405,7 @@ function runOffsetEngine(pos, neg, recharge, grace) {
 
   /* ---- 状态汇总 ---- */
   function settle(d) {
-    if (d.status === '不抵减') return;
+    if (d.status === '无法抵减') return;
     var leftover = Math.abs(d.remain);
     if (d.offset > EPS && leftover > EPS) d.status = '部分抵减';
     else if (d.offset > EPS) d.status = '已抵完';
@@ -2330,6 +2432,18 @@ PROC_RESULT.documents.forEach(function (d) {
   var c = PROC_NO_CUST[d.no] || ['', '', '', '', '', '', ''];
   d.custCode = c[0]; d.acctCode = c[1]; d.signSubj = c[2]; d.servSubj = c[3];
   d.custStar = c[4]; d.salesArea = c[5]; d.salesRep = c[6];
+});
+
+/* 客户体量（万）：按客户代码生成稳定演示值（同一客户代码取值一致），无客户信息则为空 */
+var CUST_SCALE_MAP = {};
+PROC_RESULT.documents.forEach(function (d) {
+  if (!d.custCode) { d.custScale = null; return; }
+  if (!CUST_SCALE_MAP.hasOwnProperty(d.custCode)) {
+    var h = 0;
+    for (var j = 0; j < d.custCode.length; j++) h = (h * 31 + d.custCode.charCodeAt(j)) % 100003;
+    CUST_SCALE_MAP[d.custCode] = h % 950 + 50; /* 取值范围 50 ~ 999（万） */
+  }
+  d.custScale = CUST_SCALE_MAP[d.custCode];
 });
 
 /* 批次号：DJPC + YYYYMMDD + 6位流水号（按单据顺序递增）；更新时间：日期时间格式，随批次递增 */
@@ -2384,7 +2498,8 @@ var ON_COLS = [
   { k:'docType',   label:'单据类型',         w:110 },
   { k:'docNo',     label:'单据编号',         w:170 },
   { k:'custCode',  label:'客户代码',         w:100 },
-  { k:'acctCode',  label:'账户编码',         w:110 },
+  { k:'acctCode',  label:'账户编号',         w:110 },
+  { k:'custScale', label:'客户体量',         num:true, w:100 },
   { k:'signSubj',  label:'签约主体',         w:120 },
   { k:'servSubj',  label:'服务主体',         w:220 },
   { k:'custStar',  label:'客户星级',         w:90 },
@@ -2402,7 +2517,7 @@ var ON_COLS = [
   { k:'updateTime',label:'更新时间',         w:140 },
   { k:'batchNo',   label:'批次',             w:150 }
 ];
-var ON_DEFAULT = ['docType','docNo','custCode','acctCode','signSubj','servSubj','custStar','salesArea','salesRep',
+var ON_DEFAULT = ['docType','docNo','custCode','acctCode','custScale','signSubj','servSubj','custStar','salesArea','salesRep',
   'days','cur','amtO','rate','cny','offsetAmt','remain','ageRange','status','updateTime','batchNo'];
 
 function procCell(col, d) {
@@ -2413,11 +2528,15 @@ function procCell(col, d) {
   }
   if (col.k === 'status') {
     var sc = d.status === '已抵完' ? 'success' : d.status === '部分抵减' ? 'warning'
-           : d.status === '不抵减' ? 'danger' : 'info';
+           : d.status === '无法抵减' ? 'danger' : 'info';
     return tag(d.status, sc);
   }
   if (col.k === 'offsetAmt') return fmtNum(d.offset);
   if (col.k === 'docNo') return fmtText(d.no);
+  if (col.k === 'custScale') {
+    if (d.custScale === null || d.custScale === undefined) return '<span class="zero">--</span>';
+    return fmtNum(d.custScale);
+  }
   if (col.k === 'days' || col.k === 'rate') {
     if (d[col.k] === null || d[col.k] === undefined) return '<span class="zero">--</span>';
     return col.k === 'rate' ? fmtNum(d.rate, 4) : fmtText(d.days);
@@ -2835,7 +2954,15 @@ var PAGES = {
   })
 };
 
-/* 视图四（抵减明细NEW）筛选：读取 on* 前缀控件，逻辑同 procDocFilters */
+/* 视图四（抵减明细NEW）筛选：读取 on* 前缀控件 */
+function onMultiPicks(id) {
+  var box = document.getElementById(id);
+  if (!box) return [];
+  return Array.prototype.slice.call(box.querySelectorAll('.wf-multi-item input'))
+    .filter(function (cb) { return cb.checked; })
+    .map(function (cb) { return cb.parentElement.textContent.trim(); });
+}
+
 function onDocFilters() {
   var res = PROC_RESULT.documents.slice();
   var typeBtn = document.querySelector('#onTypeSeg .seg-btn.active');
@@ -2851,6 +2978,35 @@ function onDocFilters() {
   var dMin = Number(gv('onDayMin')), dMax = Number(gv('onDayMax'));
   if (gv('onDayMin') !== '') res = res.filter(function (d) { return d.days !== null && d.days >= dMin; });
   if (gv('onDayMax') !== '') res = res.filter(function (d) { return d.days !== null && d.days <= dMax; });
+  /* 编码：类型枚举（客户代码/账户编号），未选类型时两个字段均匹配 */
+  var codeType = gv('onCodeType'), codeKw = gv('onCode');
+  if (codeKw) {
+    var codeFields = codeType === '账户编号' ? ['acctCode'] : codeType === '客户代码' ? ['custCode'] : ['custCode', 'acctCode'];
+    res = res.filter(function (d) {
+      return codeFields.some(function (f) {
+        return (d[f] || '').toUpperCase().indexOf(codeKw.toUpperCase()) > -1;
+      });
+    });
+  }
+  /* 服务主体 / 销售区域 / 归属区间：下拉复选（命中任一选中值） */
+  ['onServSel:servSubj', 'onAreaSel:salesArea', 'onAgeSel:ageRange'].forEach(function (pair) {
+    var kv = pair.split(':'), picks = onMultiPicks(kv[0]);
+    if (picks.length) res = res.filter(function (d) { return picks.indexOf(d[kv[1]]) > -1; });
+  });
+  /* 更新时间：日期时间控件，取该时刻及之后（含） */
+  var ut = gv('onUpdateTime');
+  if (ut) {
+    res = res.filter(function (d) {
+      return d.updateTime && d.updateTime.replace(/\//g, '-').replace(' ', 'T') >= ut;
+    });
+  }
+  /* 批次号：模糊匹配 */
+  var bn = gv('onBatchNo');
+  if (bn) res = res.filter(function (d) { return d.batchNo.toUpperCase().indexOf(bn.toUpperCase()) > -1; });
+  /* 客户体量：区间筛选 */
+  var sMin = Number(gv('onScaleMin')), sMax = Number(gv('onScaleMax'));
+  if (gv('onScaleMin') !== '') res = res.filter(function (d) { return d.custScale !== null && d.custScale >= sMin; });
+  if (gv('onScaleMax') !== '') res = res.filter(function (d) { return d.custScale !== null && d.custScale <= sMax; });
   return res;
 }
 
@@ -2955,8 +3111,9 @@ function wfMultiToggle(ev) {
   document.querySelectorAll('.wf-multi.open').forEach(function (b) { b.classList.remove('open'); });
   if (!wasOpen) box.classList.add('open');
 }
-function wfMultiChange() {
-  var box = document.getElementById('applyTypeSel');
+function wfMultiChange(el) {
+  var box = (el && el.closest) ? el.closest('.wf-multi') : document.getElementById('applyTypeSel');
+  if (!box) return;
   var val = box.querySelector('.wf-multi-val');
   var picked = Array.prototype.slice.call(box.querySelectorAll('.wf-multi-item input'))
     .filter(function (cb) { return cb.checked; })
