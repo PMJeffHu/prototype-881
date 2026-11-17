@@ -303,6 +303,7 @@
   .wf-fi { display: flex; align-items: flex-start; gap: 6px; font-size: 12px; }
   .wf-fi > label { flex: 0 0 auto; color: var(--text-regular); line-height: 26px; }
   .wf-fi > label .req { color: #F56C6C; margin-right: 2px; }
+  .wf-table th .req { color: #F56C6C; margin-right: 2px; }
   .wf-fi .wf-ctl { flex: 1; min-width: 0; }
   .wf-input {
     width: 100%; height: 26px; padding: 0 8px;
@@ -357,6 +358,14 @@
   .wf-table tr.sum td { background: #F5F7FA; }
   .wf-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
   .wf-strike { color: #F56C6C; text-decoration: line-through; }
+  .wf-suffix { display: flex; align-items: center; gap: 4px; }
+  .wf-suffix .wf-input { flex: 1; min-width: 0; }
+  .wf-suffix .wf-unit { color: var(--text-secondary); font-size: 12px; }
+  .wf-info {
+    display: inline-block; width: 12px; height: 12px; line-height: 12px; text-align: center;
+    border-radius: 50%; background: #C0C4CC; color: #fff; font-size: 9px;
+    font-style: normal; margin-left: 3px; vertical-align: middle;
+  }
   .wf-table .wf-add { color: var(--primary); cursor: pointer; font-size: 13px; }
   .wf-total { display: flex; gap: 40px; margin-top: 14px; font-size: 12px; color: var(--text-regular); }
   .wf-total b { color: var(--text-main); font-weight: 400; }
@@ -605,6 +614,11 @@
       <li class="menu-item" data-view="whitelist" title="逾期白名单申请OA表单">
         <div class="mi-row" onclick="switchView('whitelist')">
           <i class="mi-icon">🏷️</i><span class="mi-text">逾期白名单申请OA表单</span>
+        </div>
+      </li>
+      <li class="menu-item" data-view="stopApply" title="逾期停用规则申请">
+        <div class="mi-row" onclick="switchView('stopApply')">
+          <i class="mi-icon">⛔</i><span class="mi-text">逾期停用规则申请</span>
         </div>
       </li>
     </ul>
@@ -1445,6 +1459,62 @@
               </tbody>
             </table>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 视图：逾期停用规则申请（OA 表单，静态 HTML） ===== -->
+  <div class="view" id="view-stopApply">
+    <div class="card">
+      <div class="card-body wf-page">
+        <div class="wf-sec">基本信息</div>
+        <div style="margin-bottom:8px;">
+          <button class="btn" style="height:26px;padding:0 10px;" onclick="alert('原型演示：批量删除')">批量删除</button>
+        </div>
+        <div class="table-wrap">
+          <table class="wf-table">
+            <thead>
+              <tr>
+                <th style="width:36px;"><input type="checkbox" class="el-checkbox"></th>
+                <th style="width:44px;">序号</th>
+                <th><span class="req">*</span>销售区域</th>
+                <th><span class="req">*</span>签约业务</th>
+                <th><span class="req">*</span>客户体量起始(CNY)<i class="wf-info">i</i></th>
+                <th><span class="req">*</span>客户体量截止(CNY)<i class="wf-info">i</i></th>
+                <th><span class="req">*</span>逾期天数</th>
+                <th><span class="req">*</span>监缩金额（CNY）</th>
+                <th style="width:100px;">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><input type="checkbox" class="el-checkbox"></td>
+                <td>1</td>
+                <td><select class="wf-input"><option>请选择销售区域</option><option>美洲销售组</option><option>战略客户部</option><option>华北区</option><option>华东区</option></select></td>
+                <td><select class="wf-input"><option>请选择签约业务</option><option>海外仓储</option><option>中转代发</option></select></td>
+                <td><div class="wf-suffix"><input class="wf-input" placeholder="请输入客户体量起始值"><span class="wf-unit">W</span></div></td>
+                <td><div class="wf-suffix"><input class="wf-input" placeholder="请输入客户体量截止值"><span class="wf-unit">W</span></div></td>
+                <td><select class="wf-input"><option>请选择逾期天数</option><option>30</option><option>60</option><option>90</option><option>180</option><option>360</option></select></td>
+                <td><input class="wf-input" placeholder="请输入金额"></td>
+                <td><a class="op-link" onclick="alert('原型演示：删除')">删除</a><a class="op-link" onclick="alert('原型演示：复制')">复制</a></td>
+              </tr>
+              <tr><td colspan="9" class="wf-add" onclick="alert('原型演示：添加明细')">＋</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="wf-fi" style="margin-top:14px;">
+          <label><span class="req">*</span>申请原因:</label>
+          <div class="wf-ctl">
+            <textarea class="wf-textarea" placeholder="请输入申请原因"></textarea>
+            <span class="wf-count">0/225</span>
+          </div>
+        </div>
+
+        <div class="wf-foot">
+          <button class="btn btn-primary" onclick="alert('原型演示：确定')">确 定</button>
+          <button class="btn" onclick="alert('原型演示：取消')">取 消</button>
         </div>
       </div>
     </div>
@@ -2779,7 +2849,7 @@ function onDocFilters() {
   return res;
 }
 
-var VIEW_NAMES = { aging: '客户逾期账龄表', offsetnew: '逾期账单抵减明细', process: '逾期账单抵减过程', whiteApply: '逾期白名单申请', graceApply: '宽限期申请', grace: '宽限期申请OA表单', whitelist: '逾期白名单申请OA表单' };
+var VIEW_NAMES = { aging: '客户逾期账龄表', offsetnew: '逾期账单抵减明细', process: '逾期账单抵减过程', whiteApply: '逾期白名单申请', graceApply: '宽限期申请', grace: '宽限期申请OA表单', whitelist: '逾期白名单申请OA表单', stopApply: '逾期停用规则申请' };
 var cur = PAGES.aging;
 
 function switchView(key) {
