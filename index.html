@@ -107,6 +107,11 @@
     box-shadow: 0 1px 4px rgba(0,21,41,.08);
     position: sticky; top: 0; z-index: 10;
   }
+  .header.oa-mode {
+    height: 64px;
+    flex-basis: 64px;
+    padding-left: 32px;
+  }
   .breadcrumb { display: flex; align-items: center; gap: 6px; color: var(--text-secondary); font-size: 13px; }
   .breadcrumb .sep { color: var(--border); }
   .breadcrumb .cur { color: var(--text-main); }
@@ -2861,12 +2866,14 @@ function switchView(key) {
   });
   document.getElementById('crumbCur').textContent = VIEW_NAMES[key] || key;
   cur = PAGES[key] || null;
-  /* OA 表单类页面隐藏顶部用户信息行（张财务）与「首页/报表中心」面包屑前缀 */
+  /* OA 表单类页面隐藏顶部用户信息行（张财务）与「首页/报表中心」面包屑前缀，并增高顶部栏 */
   var OA_HIDE_USER = { grace: 1, whitelist: 1, stopApply: 1 };
   var userEl = document.querySelector('.user-info');
   if (userEl) userEl.style.display = OA_HIDE_USER[key] ? 'none' : '';
   var crumbPre = document.querySelector('.crumb-pre');
   if (crumbPre) crumbPre.style.display = OA_HIDE_USER[key] ? 'none' : '';
+  var headerEl = document.querySelector('.header');
+  if (headerEl) headerEl.classList.toggle('oa-mode', !!OA_HIDE_USER[key]);
 }
 
 /* ===== 字段选择弹出层（作用于当前视图页面） ===== */
