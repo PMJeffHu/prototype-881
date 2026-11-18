@@ -2593,7 +2593,7 @@ PROC_RESULT.documents.forEach(function (d) {
   d.custScale = CUST_SCALE_MAP[d.custCode];
 });
 
-/* 批次号：DJPC + YYYYMMDD + 6位流水号（按单据顺序递增）；更新时间：日期时间格式，随批次递增 */
+/* 批次号：DJPC + 客户代码 + YYYYMMDD + 4位流水号（按单据顺序递增）；更新时间：日期时间格式，随批次递增 */
 /* 逾期账龄区间：正/负数账单按逾期天数归属账龄表区间；充值单→待核销充值金额；宽限单→剩余宽限金额 */
 function procAgeRange(d) {
   if (d.type === '充值单') return '待核销充值金额';
@@ -2609,7 +2609,7 @@ function procAgeRange(d) {
 }
 
 PROC_RESULT.documents.forEach(function (d, i) {
-  d.batchNo = 'DJPC20261116' + ('000000' + (i + 1)).slice(-6);
+  d.batchNo = 'DJPC' + (d.custCode || '') + '20261116' + ('0000' + (i + 1)).slice(-4);
   var t = 9 * 60 + 37 + i * 7;
   d.updateTime = '2026/11/16 ' + ('0' + Math.floor(t / 60)).slice(-2) + ':' + ('0' + (t % 60)).slice(-2);
   d.ageRange = procAgeRange(d);
@@ -2618,14 +2618,17 @@ PROC_RESULT.documents.forEach(function (d, i) {
 });
 
 /* 抵减过程记录：批次以正数账单为单位——同一目标账单的全部抵减事件（负数账单/充值单/宽限单）
-   共享同一批次，账单被抵减完即批次结束；批次号按目标账单首次被抵减顺序编号。
+   共享同一批次，账单被抵减完即批次结束；批次号 = DJPC + 目标账单客户代码 + YYYYMMDD + 4位流水。
    更新时间取来源单据的更新时间 */
 var procBatchMap = {};
 var procBatchSeq = 0;
+var procDocMap = {};
+PROC_RESULT.documents.forEach(function (d) { procDocMap[d.no] = d; });
 PROC_RESULT.events.forEach(function (e) {
   if (!procBatchMap[e.targetNo]) {
     procBatchSeq++;
-    procBatchMap[e.targetNo] = 'DJPC20261116' + ('000000' + procBatchSeq).slice(-6);
+    var tgtDoc = procDocMap[e.targetNo];
+    procBatchMap[e.targetNo] = 'DJPC' + (tgtDoc && tgtDoc.custCode ? tgtDoc.custCode : '') + '20261116' + ('0000' + procBatchSeq).slice(-4);
   }
   e.batchNo = procBatchMap[e.targetNo];
   var src = null, tgt = null;
@@ -2662,7 +2665,7 @@ var ON_COLS = [
   { k:'ageRange',  label:'归属区间',         w:130 },
   { k:'status',    label:'抵减状态',         w:110 },
   { k:'updateTime',label:'更新时间',         w:140 },
-  { k:'batchNo',   label:'批次',             w:150 }
+  { k:'batchNo',   label:'批次',             w:180 }
 ];
 var ON_DEFAULT = ['docType','docNo','custCode','acctCode','custScale','signSubj','servSubj','custStar','salesArea','salesRep',
   'days','cur','amtO','rate','cny','offsetAmt','remain','ageRange','status','updateTime','batchNo'];
@@ -2708,7 +2711,7 @@ var PROC_EVENT_COLS = [
   { k:'amt',        label:'本次抵减金额(CNY)',  num:true, w:160 },
   { k:'srcRemain',  label:'抵减单据剩余(CNY)',  num:true, w:150 },
   { k:'targetRemain', label:'被抵减单据剩余(CNY)', num:true, w:160 },
-  { k:'batchNo',    label:'批次',               w:150 },
+  { k:'batchNo',    label:'批次',               w:180 },
   { k:'updateTime', label:'更新时间',           w:140 }
 ];
 /* 客户信息字段（取被抵减单据）默认不展示，可通过齿轮字段面板勾选 */
@@ -2833,9 +2836,9 @@ function openAgeDetail(custCode, key, amount) {
     var demoA2 = Math.round((demoOffset - demoA1) * 100) / 100;
     var demoData = [
       { bill: 'B' + custCode + '202609010001', cycle: '2026-09-01至2026-09-30',
-        type: '负数账单抵减', src: 'B' + custCode + '202608150005', amt: demoA1, batch: 'DJPC20261116000101', time: '2026/11/16 09:52' },
+        type: '负数账单抵减', src: 'B' + custCode + '202608150005', amt: demoA1, batch: 'DJPC' + custCode + '202611160001', time: '2026/11/16 09:52' },
       { bill: 'B' + custCode + '202610010001', cycle: '2026-10-01至2026-10-31',
-        type: '充值单抵减', src: 'RN202611160001', amt: demoA2, batch: 'DJPC20261116000102', time: '2026/11/16 09:59' }
+        type: '充值单抵减', src: 'RN202611160001', amt: demoA2, batch: 'DJPC' + custCode + '202611160002', time: '2026/11/16 09:59' }
     ];
     demoData.forEach(function (d) {
       items.push({
@@ -2930,8 +2933,8 @@ function openRcDetail(custCode, amount) {
     var demoA1 = Math.round(demoOffset * 0.6 * 100) / 100;
     var demoA2 = Math.round((demoOffset - demoA1) * 100) / 100;
     var demoData = [
-      { no: 'RN202611160101', cur: 'CNY', rate: 1, amt: demoA1, target: 'B' + custCode + '202609150003', batch: 'DJPC20261116000101', time: '2026/11/16 09:52' },
-      { no: 'RN202611160102', cur: 'USD', rate: 7.1311, amt: demoA2, target: 'B' + custCode + '202610120004', batch: 'DJPC20261116000102', time: '2026/11/16 09:59' }
+      { no: 'RN202611160101', cur: 'CNY', rate: 1, amt: demoA1, target: 'B' + custCode + '202609150003', batch: 'DJPC' + custCode + '202611160001', time: '2026/11/16 09:52' },
+      { no: 'RN202611160102', cur: 'USD', rate: 7.1311, amt: demoA2, target: 'B' + custCode + '202610120004', batch: 'DJPC' + custCode + '202611160002', time: '2026/11/16 09:59' }
     ];
     demoData.forEach(function (d) {
       items.push({
@@ -3028,8 +3031,8 @@ function openGrDetail(custCode, whiteType, startDate, endDate, amount) {
     var demoA1 = Math.round(demoOffset * 0.6 * 100) / 100;
     var demoA2 = Math.round((demoOffset - demoA1) * 100) / 100;
     var demoData = [
-      { no: 'YQBMD-20261116-0101', amt: demoA1, target: 'B' + custCode + '202608100001', batch: 'DJPC20261116000101', time: '2026/11/16 09:52' },
-      { no: 'YQBMD-20261116-0102', amt: demoA2, target: 'B' + custCode + '202609120002', batch: 'DJPC20261116000102', time: '2026/11/16 09:59' }
+      { no: 'YQBMD-20261116-0101', amt: demoA1, target: 'B' + custCode + '202608100001', batch: 'DJPC' + custCode + '202611160001', time: '2026/11/16 09:52' },
+      { no: 'YQBMD-20261116-0102', amt: demoA2, target: 'B' + custCode + '202609120002', batch: 'DJPC' + custCode + '202611160002', time: '2026/11/16 09:59' }
     ];
     demoData.forEach(function (d) {
       items.push({
