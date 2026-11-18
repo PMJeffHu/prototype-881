@@ -417,6 +417,31 @@
   .op-link { color: var(--primary); text-decoration: none; cursor: pointer; margin-right: 8px; font-size: 12px; }
   .op-link:hover { color: var(--primary-hover); }
   .op-more { color: var(--primary); cursor: pointer; font-size: 12px; }
+  /* 操作列「更多」折叠下拉 */
+  .op-drop { position: relative; display: inline-block; margin-left: 6px; }
+  .op-drop-menu {
+    display: none; position: absolute; right: 0; top: 20px; z-index: 40;
+    background: #fff; border: 1px solid var(--border); border-radius: 4px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.12); padding: 4px 0; min-width: 96px;
+  }
+  .op-drop.open .op-drop-menu { display: block; }
+  .op-drop-item {
+    display: block; padding: 6px 14px; font-size: 12px;
+    color: var(--text-regular); cursor: pointer; white-space: nowrap;
+  }
+  .op-drop-item:hover { background: #F5F7FA; color: var(--primary); }
+  /* 操作日志弹窗筛选与分页 */
+  .log-filter { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+  .log-filter > label { font-size: 13px; color: var(--text-regular); white-space: nowrap; }
+  .log-filter .el-select { width: 200px; }
+  .log-range { display: flex; align-items: center; gap: 6px; }
+  .log-range .el-input { width: 190px; }
+  .log-page { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 12px; color: var(--text-regular); }
+  .log-page .el-select { width: 92px; }
+  .log-page input {
+    width: 46px; height: 26px; border: 1px solid var(--border); border-radius: 3px;
+    text-align: center; font-size: 12px; outline: none;
+  }
 
   .th-setting { cursor: pointer; margin-left: 8px; font-size: 14px; color: var(--text-secondary); }
   .th-setting:hover { color: var(--primary); }
@@ -1870,6 +1895,61 @@
   </div>
 </div>
 
+<!-- ===== 操作日志弹窗（账龄表操作列「更多」下拉联动） ===== -->
+<div class="sum-dialog-mask" id="logDialog">
+  <div class="sum-dialog" style="width:1080px;">
+    <div class="sd-header">
+      <span class="sd-title" style="border-left:4px solid var(--primary);padding-left:8px;">操作日志</span>
+      <button class="sd-close" onclick="closeLogDialog()">✕</button>
+    </div>
+    <div class="sd-body">
+      <div class="log-filter">
+        <label>类别:</label>
+        <select class="el-select" id="logType">
+          <option value="">请选择类别</option>
+          <option>数据同步</option>
+          <option>系统计算</option>
+        </select>
+        <label style="margin-left:14px;">操作时间:</label>
+        <div class="log-range">
+          <input type="datetime-local" class="el-input" id="logTimeStart" value="2025-11-18T00:00">
+          <span>-</span>
+          <input type="datetime-local" class="el-input" id="logTimeEnd" value="2026-11-18T23:59">
+        </div>
+        <button class="btn btn-primary" style="margin-left:14px;" onclick="logQuery()">查 询</button>
+      </div>
+      <table class="sd-table">
+        <thead>
+          <tr>
+            <th style="width:64px;">序号</th>
+            <th style="width:130px;">操作类型</th>
+            <th>操作内容</th>
+            <th style="width:110px;">操作人</th>
+            <th style="width:180px;">操作时间</th>
+          </tr>
+        </thead>
+        <tbody id="logBody"></tbody>
+      </table>
+      <div class="log-page">
+        <span id="logTotal">共 0 条</span>
+        <select class="el-select" onchange="logChangeSize(this)">
+          <option value="20">20条/页</option>
+          <option value="10">10条/页</option>
+          <option value="50">50条/页</option>
+        </select>
+        <button class="pg-btn" id="logPgPrev" onclick="logGoPage(-1)">上一页</button>
+        <span id="logPages"></span>
+        <button class="pg-btn" id="logPgNext" onclick="logGoPage(1)">下一页</button>
+        <span>前往</span><input type="number" min="1" id="logJump" value="1"><span>页</span>
+        <button class="btn" style="height:26px;padding:0 10px;" onclick="logGoPage()">GO</button>
+      </div>
+    </div>
+    <div class="sd-footer">
+      <button class="btn" onclick="closeLogDialog()">关 闭</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ===== 侧边栏折叠 ===== */
 var sider = document.getElementById('sider');
@@ -1961,7 +2041,10 @@ function createPage(opts) {
         '<a class="op-link" onclick="rowOp(\'查看原文\', this)">查看原文</a>'
         + '<a class="op-link" onclick="rowOp(\'手动同步\', this)">手动同步</a>'
         + '<a class="op-link" onclick="rowOp(\'重试\', this)">重试</a>'
-        + '<span class="op-more" onclick="rowOp(\'更多操作\', this)">更多 ▾</span>') + '</td></tr>';
+        + '<span class="op-drop">'
+        + '<span class="op-more" onclick="toggleOpDrop(event)">更多 ▾</span>'
+        + '<div class="op-drop-menu"><a class="op-drop-item" onclick="openLogDialog()">操作日志</a></div>'
+        + '</span>') + '</td></tr>';
       return tr;
     }).join('');
     if (!view.length) {
@@ -2931,6 +3014,98 @@ grDialog.addEventListener('click', function (e) {
   if (e.target === this) closeGrDialog();
 });
 
+/* ===== 操作日志弹窗（账龄表「更多」折叠下拉联动） ===== */
+var LOG_ROWS = [
+  { type: '数据同步', content: '客户逾期账龄金额数据变更，实时同步客户系统', user: '系统', time: '2026-11-04 01:12:39' },
+  { type: '系统计算', content: '系统定时计算触发系统自动计算', user: '系统', time: '2026-11-04 01:12:39' },
+  { type: '数据同步', content: '客户逾期账龄金额数据变更，实时同步客户系统', user: '系统', time: '2026-11-02 16:27:08' },
+  { type: '系统计算', content: '系统定时计算触发系统自动计算', user: '系统', time: '2026-11-02 16:27:08' },
+  { type: '数据同步', content: '客户逾期账龄金额数据变更，实时同步客户系统', user: '系统', time: '2026-11-01 00:14:20' },
+  { type: '系统计算', content: '系统定时计算触发系统自动计算', user: '系统', time: '2026-11-01 00:14:20' },
+  { type: '数据同步', content: '客户逾期账龄金额数据变更，实时同步客户系统', user: '系统', time: '2026-10-30 16:32:29' },
+  { type: '系统计算', content: '系统定时计算触发系统自动计算', user: '系统', time: '2026-10-30 16:32:29' }
+];
+var logDialog = document.getElementById('logDialog');
+var logPage = 1, logPageSize = 20;
+
+function toggleOpDrop(ev) {
+  ev.stopPropagation();
+  var box = ev.currentTarget.parentElement;
+  var wasOpen = box.classList.contains('open');
+  document.querySelectorAll('.op-drop.open').forEach(function (b) { b.classList.remove('open'); });
+  if (!wasOpen) box.classList.add('open');
+}
+
+function logFilteredRows() {
+  var type = gv('logType');
+  var ts = gv('logTimeStart'), te = gv('logTimeEnd');
+  return LOG_ROWS.filter(function (r) {
+    if (type && r.type !== type) return false;
+    var t = r.time.replace(/\//g, '-').replace(' ', 'T');
+    if (ts && t < ts) return false;
+    if (te && t > te) return false;
+    return true;
+  });
+}
+
+function renderLogRows() {
+  var rows = logFilteredRows();
+  var pages = Math.max(1, Math.ceil(rows.length / logPageSize));
+  if (logPage > pages) logPage = pages;
+  var start = (logPage - 1) * logPageSize;
+  var body = rows.slice(start, start + logPageSize).map(function (r, i) {
+    return '<tr>'
+      + '<td>' + (start + i + 1) + '</td>'
+      + '<td>' + tag(r.type, r.type === '数据同步' ? 'blue' : 'violet') + '</td>'
+      + '<td>' + r.content + '</td>'
+      + '<td>' + r.user + '</td>'
+      + '<td>' + r.time + '</td>'
+      + '</tr>';
+  }).join('');
+  if (!rows.length) body = '<tr><td colspan="5" style="text-align:center;padding:32px 0;color:#909399;">暂无数据</td></tr>';
+  document.getElementById('logBody').innerHTML = body;
+  document.getElementById('logTotal').innerHTML = '共 <b>' + rows.length + '</b> 条';
+  var ph = '';
+  for (var i = 1; i <= pages; i++) {
+    ph += '<button class="pg-btn' + (i === logPage ? ' active' : '') + '" onclick="logGoPage(' + i + ')">' + i + '</button>';
+  }
+  document.getElementById('logPages').innerHTML = ph;
+  document.getElementById('logPgPrev').disabled = logPage <= 1;
+  document.getElementById('logPgNext').disabled = logPage >= pages;
+  document.getElementById('logJump').value = logPage;
+}
+
+function openLogDialog() {
+  document.querySelectorAll('.op-drop.open').forEach(function (b) { b.classList.remove('open'); });
+  logPage = 1;
+  renderLogRows();
+  logDialog.classList.add('open');
+}
+
+function closeLogDialog() { logDialog.classList.remove('open'); }
+
+function logQuery() { logPage = 1; renderLogRows(); }
+
+function logChangeSize(sel) { logPageSize = Number(sel.value) || 20; logPage = 1; renderLogRows(); }
+
+function logGoPage(step) {
+  var pages = Math.max(1, Math.ceil(logFilteredRows().length / logPageSize));
+  var target = logPage;
+  if (step === undefined || step === null || step === '') {
+    target = Number(document.getElementById('logJump').value) || 1;
+  } else if (step === -1 || step === 1) {
+    target = logPage + step;
+  } else {
+    target = Number(step) || 1;
+  }
+  logPage = Math.max(1, Math.min(pages, target));
+  renderLogRows();
+}
+
+logDialog.addEventListener('click', function (e) {
+  if (e.target === this) closeLogDialog();
+});
+
 /* ======================================================
    页面实例与视图切换
    ====================================================== */
@@ -3143,6 +3318,9 @@ function wfMultiChange(el) {
 document.addEventListener('click', function (e) {
   if (colPop.classList.contains('open') && !colPop.contains(e.target)) closeColPop();
   document.querySelectorAll('.wf-multi.open').forEach(function (b) {
+    if (!b.contains(e.target)) b.classList.remove('open');
+  });
+  document.querySelectorAll('.op-drop.open').forEach(function (b) {
     if (!b.contains(e.target)) b.classList.remove('open');
   });
 });
