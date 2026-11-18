@@ -934,6 +934,59 @@
                   <input type="text" class="el-input" id="pEvTarget" placeholder="请输入被抵减单据编号">
                 </div>
               </div>
+              <div class="fi">
+                <label>编码:</label>
+                <div class="fi-controls">
+                  <select class="el-select code-type" id="pEvCodeType">
+                    <option value="">编码类型</option>
+                    <option>客户代码</option>
+                    <option>账户编号</option>
+                  </select>
+                  <input type="text" class="el-input" id="pEvCode" placeholder="请输入编码">
+                </div>
+              </div>
+              <div class="fi">
+                <label>服务主体:</label>
+                <div class="fi-controls">
+                  <div class="wf-multi" id="pEvServSel">
+                    <div class="wf-multi-val" onclick="wfMultiToggle(event)" data-placeholder="请选择服务主体">请选择服务主体</div>
+                    <div class="wf-multi-pop" onclick="event.stopPropagation()">
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">CIRRO FULFILLMENT MEXICO</label>
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">ETARGET LIMITED</label>
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">US ELOGISTICS SERVICE CORP</label>
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">深圳易可达科技有限公司</label>
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">Super Smart Service ltd</label>
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">ZENDA LOGISTICS CORP.</label>
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">ELOGISTICS (GA) SERVICE CORP</label>
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">JS LOGISTICS</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="fi">
+                <label>销售区域:</label>
+                <div class="fi-controls">
+                  <div class="wf-multi" id="pEvAreaSel">
+                    <div class="wf-multi-val" onclick="wfMultiToggle(event)" data-placeholder="请选择销售区域">请选择销售区域</div>
+                    <div class="wf-multi-pop" onclick="event.stopPropagation()">
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">战略客户部</label>
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">美洲销售组</label>
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">品牌客户组</label>
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">华北区</label>
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">华东区</label>
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">广佛区</label>
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">默认销售区域</label>
+                      <label class="wf-multi-item"><input type="checkbox" class="el-checkbox" onchange="wfMultiChange(this)">测试专用产品业务勿用</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="fi">
+                <label>批次号:</label>
+                <div class="fi-controls">
+                  <input type="text" class="el-input" id="pEvBatch" placeholder="请输入批次号">
+                </div>
+              </div>
             </div>
 
             <div class="filter-actions">
@@ -2670,7 +2723,7 @@ function procEventCell(col, e) {
   return fmtText(e[col.k]);
 }
 
-/* 流水表筛选：抵减类型 + 抵减单据 + 被抵减单据 */
+/* 流水表筛选：抵减类型 + 抵减单据 + 被抵减单据 + 编码 + 服务主体 + 销售区域 + 批次号 */
 function procEventFilters() {
   var res = PROC_RESULT.events.slice();
   var t = gv('pEvType');
@@ -2679,6 +2732,24 @@ function procEventFilters() {
   if (s) res = res.filter(function (e) { return e.srcNo.toUpperCase().indexOf(s.toUpperCase()) > -1; });
   var g = gv('pEvTarget');
   if (g) res = res.filter(function (e) { return e.targetNo.toUpperCase().indexOf(g.toUpperCase()) > -1; });
+  /* 编码：类型枚举（客户代码/账户编号），未选类型时两个字段均匹配 */
+  var codeType = gv('pEvCodeType'), codeKw = gv('pEvCode');
+  if (codeKw) {
+    var codeFields = codeType === '账户编号' ? ['acctCode'] : codeType === '客户代码' ? ['custCode'] : ['custCode', 'acctCode'];
+    res = res.filter(function (e) {
+      return codeFields.some(function (f) {
+        return (e[f] || '').toUpperCase().indexOf(codeKw.toUpperCase()) > -1;
+      });
+    });
+  }
+  /* 服务主体 / 销售区域：下拉复选（命中任一选中值） */
+  ['pEvServSel:servSubj', 'pEvAreaSel:salesArea'].forEach(function (pair) {
+    var kv = pair.split(':'), picks = onMultiPicks(kv[0]);
+    if (picks.length) res = res.filter(function (e) { return picks.indexOf(e[kv[1]]) > -1; });
+  });
+  /* 批次号：模糊匹配 */
+  var bn = gv('pEvBatch');
+  if (bn) res = res.filter(function (e) { return (e.batchNo || '').toUpperCase().indexOf(bn.toUpperCase()) > -1; });
   return res;
 }
 
