@@ -308,6 +308,10 @@
     background: #ECF5FF; border: 1px solid #D9ECFF; border-radius: 3px;
     color: #409EFF; font-size: 12px; line-height: 1.5;
   }
+  .wf-note.danger {
+    background: #FEF0F0; border-color: #FDE2E2;
+    color: #F56C6C;
+  }
   .wf-fields { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px 20px; }
   .wf-fields.cols3 { grid-template-columns: repeat(3, 1fr); }
   .wf-fi { display: flex; align-items: flex-start; gap: 6px; font-size: 12px; }
@@ -977,6 +981,7 @@
             </div>
 
             <div class="wf-sec">应收明细</div>
+            <div class="wf-note danger">客户当前逾期金额-已抵减充值单，记账汇率每月1号更新，若申请宽限有效时间涉及跨月，需自行估算汇率差异影响</div>
             <div style="margin-bottom:8px;">
               <button class="btn" style="height:26px;padding:0 10px;" onclick="alert('原型演示：批量删除')">批量删除</button>
             </div>
@@ -1096,7 +1101,7 @@
             </div>
 
             <div class="wf-sec">应收明细</div>
-            <div class="wf-note">点击此展示的逾期金额会算出该金额，记录上传月1号更新，特殊情况请财务在对应月更新，另行审核！重算账单策略</div>
+            <div class="wf-note danger">客户当前逾期金额-已抵减充值单，记账汇率每月1号更新，若申请宽限有效时间涉及跨月，需自行估算汇率差异影响</div>
             <div class="table-wrap">
               <table class="wf-table">
                 <thead>
