@@ -1740,6 +1740,7 @@
             <th>抵减单据</th>
             <th>被抵减单据</th>
             <th>批次号</th>
+            <th style="width:130px;">更新时间</th>
             <th class="num">本次抵减金额(CNY)</th>
           </tr>
         </thead>
@@ -1793,6 +1794,7 @@
             <th>抵减单据</th>
             <th>被抵减单据</th>
             <th>批次号</th>
+            <th style="width:130px;">更新时间</th>
             <th class="num">本次抵减金额(CNY)</th>
           </tr>
         </thead>
@@ -1845,6 +1847,7 @@
             <th>抵减单据</th>
             <th>被抵减单据</th>
             <th>批次号</th>
+            <th style="width:130px;">更新时间</th>
             <th class="num">本次抵减金额(CNY)</th>
           </tr>
         </thead>
@@ -2676,14 +2679,14 @@ function openAgeDetail(custCode, key, amount) {
     var demoA2 = Math.round((demoOffset - demoA1) * 100) / 100;
     var demoData = [
       { bill: 'B' + custCode + '202609010001', cycle: '2026-09-01至2026-09-30',
-        type: '负数账单抵减', src: 'B' + custCode + '202608150005', amt: demoA1, batch: 'DJPC20261116000101' },
+        type: '负数账单抵减', src: 'B' + custCode + '202608150005', amt: demoA1, batch: 'DJPC20261116000101', time: '2026/11/16 09:52' },
       { bill: 'B' + custCode + '202610010001', cycle: '2026-10-01至2026-10-31',
-        type: '充值单抵减', src: 'RN202611160001', amt: demoA2, batch: 'DJPC20261116000102' }
+        type: '充值单抵减', src: 'RN202611160001', amt: demoA2, batch: 'DJPC20261116000102', time: '2026/11/16 09:59' }
     ];
     demoData.forEach(function (d) {
       items.push({
         bill: { no: d.bill, billCycle: d.cycle, days: demoDays, rate: 1, cny: 0 },
-        ev: { type: d.type, srcNo: d.src, targetNo: d.bill, amt: d.amt, batchNo: d.batch }
+        ev: { type: d.type, srcNo: d.src, targetNo: d.bill, amt: d.amt, batchNo: d.batch, updateTime: d.time }
       });
     });
     offsetTotal = demoOffset;
@@ -2720,6 +2723,7 @@ function openAgeDetail(custCode, key, amount) {
       + '<td>' + (it.ev ? it.ev.srcNo : '--') + '</td>'
       + '<td>' + (it.ev ? it.ev.targetNo : '--') + '</td>'
       + '<td>' + (it.ev && it.ev.batchNo ? it.ev.batchNo : '--') + '</td>'
+      + '<td>' + (it.ev && it.ev.updateTime ? it.ev.updateTime : '--') + '</td>'
       + '<td class="num">' + fmtNum(it.ev ? it.ev.amt : 0) + '</td>'
       + '</tr>';
   });
@@ -2772,13 +2776,13 @@ function openRcDetail(custCode, amount) {
     var demoA1 = Math.round(demoOffset * 0.6 * 100) / 100;
     var demoA2 = Math.round((demoOffset - demoA1) * 100) / 100;
     var demoData = [
-      { no: 'RN202611160101', cur: 'CNY', rate: 1, amt: demoA1, target: 'B' + custCode + '202609150003', batch: 'DJPC20261116000101' },
-      { no: 'RN202611160102', cur: 'USD', rate: 7.1311, amt: demoA2, target: 'B' + custCode + '202610120004', batch: 'DJPC20261116000102' }
+      { no: 'RN202611160101', cur: 'CNY', rate: 1, amt: demoA1, target: 'B' + custCode + '202609150003', batch: 'DJPC20261116000101', time: '2026/11/16 09:52' },
+      { no: 'RN202611160102', cur: 'USD', rate: 7.1311, amt: demoA2, target: 'B' + custCode + '202610120004', batch: 'DJPC20261116000102', time: '2026/11/16 09:59' }
     ];
     demoData.forEach(function (d) {
       items.push({
         rc: { no: d.no, cur: d.cur, rate: d.rate, cny: 0 },
-        ev: { type: '充值单抵减', srcNo: d.no, targetNo: d.target, amt: d.amt, batchNo: d.batch }
+        ev: { type: '充值单抵减', srcNo: d.no, targetNo: d.target, amt: d.amt, batchNo: d.batch, updateTime: d.time }
       });
     });
     offsetTotal = demoOffset;
@@ -2814,6 +2818,7 @@ function openRcDetail(custCode, amount) {
       + '<td>' + (it.ev ? it.ev.srcNo : '--') + '</td>'
       + '<td>' + (it.ev ? it.ev.targetNo : '--') + '</td>'
       + '<td>' + (it.ev && it.ev.batchNo ? it.ev.batchNo : '--') + '</td>'
+      + '<td>' + (it.ev && it.ev.updateTime ? it.ev.updateTime : '--') + '</td>'
       + '<td class="num">' + fmtNum(it.ev ? it.ev.amt : 0) + '</td>'
       + '</tr>';
   });
@@ -2869,13 +2874,13 @@ function openGrDetail(custCode, whiteType, startDate, endDate, amount) {
     var demoA1 = Math.round(demoOffset * 0.6 * 100) / 100;
     var demoA2 = Math.round((demoOffset - demoA1) * 100) / 100;
     var demoData = [
-      { no: 'YQBMD-20261116-0101', amt: demoA1, target: 'B' + custCode + '202608100001', batch: 'DJPC20261116000101' },
-      { no: 'YQBMD-20261116-0102', amt: demoA2, target: 'B' + custCode + '202609120002', batch: 'DJPC20261116000102' }
+      { no: 'YQBMD-20261116-0101', amt: demoA1, target: 'B' + custCode + '202608100001', batch: 'DJPC20261116000101', time: '2026/11/16 09:52' },
+      { no: 'YQBMD-20261116-0102', amt: demoA2, target: 'B' + custCode + '202609120002', batch: 'DJPC20261116000102', time: '2026/11/16 09:59' }
     ];
     demoData.forEach(function (d) {
       items.push({
         gd: { no: d.no, cny: 0 },
-        ev: { type: '宽限金额抵减', srcNo: d.no, targetNo: d.target, amt: d.amt, batchNo: d.batch }
+        ev: { type: '宽限金额抵减', srcNo: d.no, targetNo: d.target, amt: d.amt, batchNo: d.batch, updateTime: d.time }
       });
     });
     offsetTotal = demoOffset;
@@ -2908,6 +2913,7 @@ function openGrDetail(custCode, whiteType, startDate, endDate, amount) {
       + '<td>' + (it.ev ? it.ev.srcNo : '--') + '</td>'
       + '<td>' + (it.ev ? it.ev.targetNo : '--') + '</td>'
       + '<td>' + (it.ev && it.ev.batchNo ? it.ev.batchNo : '--') + '</td>'
+      + '<td>' + (it.ev && it.ev.updateTime ? it.ev.updateTime : '--') + '</td>'
       + '<td class="num">' + fmtNum(it.ev ? it.ev.amt : 0) + '</td>'
       + '</tr>';
   });
